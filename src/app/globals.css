@@ -1,26 +1,20 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* El modo oscuro lo controla la clase .dark en <html>, no el ajuste del sistema. */
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Colores del grafico: validados por separado para cada fondo. */
+:root {
+  --chart-income: #1baf7a;
+  --chart-expense: #eb6834;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.dark {
+  --chart-income: #199e70;
+  --chart-expense: #d95926;
 }

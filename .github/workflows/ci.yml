@@ -22,7 +22,12 @@ jobs:
 
       - name: Install gitleaks
         run: |
-          curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_linux_x64.tar.gz -o gitleaks.tar.gz
+          # --retry cubre los cortes de red del runner, que son frecuentes y
+          # no dicen nada sobre el codigo. Sin esto, un fallo transitorio deja
+          # el pipeline en rojo y acabas ignorando los rojos.
+          curl -sSL --retry 5 --retry-delay 3 --retry-all-errors --fail \
+            https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_linux_x64.tar.gz \
+            -o gitleaks.tar.gz
           tar -xzf gitleaks.tar.gz gitleaks
           sudo mv gitleaks /usr/local/bin/
 

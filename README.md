@@ -55,8 +55,16 @@ Other commands:
   it reaches production.
 - **Secret scanning** with gitleaks across the full history.
 - **Protected `main` branch** against force pushes and deletion.
-- **Continuous deployment** on Vercel: every push to `main` ships, and every
-  pull request gets its own preview URL.
+- **Deployment from the pipeline**: production deploys run as a final job that
+  only starts once secret scanning and the build are green. Vercel's own Git
+  deployments are switched off, so nothing reaches production without clearing
+  the checks first.
+
+Wiring the deploy into the pipeline costs something: pull requests no longer
+get automatic preview URLs from Vercel. That was worth trading. Before, the two
+systems listened to the same push independently and Vercel usually finished
+first, so a red pipeline did not stop a release - the checks were reporting on
+code that was already live.
 
 ## Roadmap
 

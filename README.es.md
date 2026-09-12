@@ -56,8 +56,16 @@ Otros comandos:
   detecta antes de llegar a produccion.
 - **Escaneo de secretos** con gitleaks sobre el historial completo.
 - **Rama `main` protegida** frente a *force push* y borrado.
-- **Despliegue continuo** en Vercel: cada push a `main` publica, y cada pull
-  request genera su propia URL de vista previa.
+- **Despliegue desde el pipeline**: la publicacion en produccion es un job final
+  que solo arranca cuando el escaneo de secretos y la compilacion estan en
+  verde. El despliegue automatico de Vercel esta desactivado, asi que nada llega
+  a produccion sin pasar antes por los controles.
+
+Meter el despliegue dentro del pipeline tiene un coste: las pull requests ya no
+reciben URL de vista previa automatica de Vercel. Compensa. Antes, los dos
+sistemas escuchaban el mismo push por separado y Vercel solia terminar primero,
+de modo que un pipeline en rojo no impedia publicar: los controles opinaban
+sobre codigo que ya estaba en produccion.
 
 ## Proximos pasos
 

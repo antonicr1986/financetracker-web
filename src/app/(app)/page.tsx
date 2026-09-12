@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import MonthlyChart from "@/components/MonthlyChart";
-import { mockTransactions } from "@/lib/mock";
+import { getTransactions } from "@/lib/api/client";
 import {
   availableMonths,
   breakdownOf,
@@ -87,14 +87,51 @@ function TransactionRow({ transaction }: { transaction: TransactionDto }) {
 }
 
 export default function Home() {
-  const months = useMemo(() => availableMonths(mockTransactions), []);
-  const [selected, setSelected] = useState(months[months.length - 1]);
+  const [allTransactions, setAllTransactions] = useState<TransactionDto[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string | null>(null);
 
-  const monthly = useMemo(() => monthlySeries(mockTransactions), []);
+  useEffect(() => {
+    let cancelled = false;
+
+    getTransactions()
+      .then((data) => {
+        if (cancelled) return;
+        setAllTransactions(data);
+        const months = availableMonths(data);
+        setSelected(months[months.length - 1] ?? null);
+      })
+      .catch((cause: unknown) => {
+        if (cancelled) return;
+        setError(
+          cause instanceof Error
+            ? cause.message
+            : "No se han podido cargar los datos.",
+        );
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const months = useMemo(
+    () => availableMonths(allTransactions),
+    [allTransactions],
+  );
+
+  const monthly = useMemo(
+    () => monthlySeries(allTransactions),
+    [allTransactions],
+  );
 
   const transactions = useMemo(
-    () => transactionsOfMonth(mockTransactions, selected),
-    [selected],
+    () => (selected ? transactionsOfMonth(allTransactions, selected) : []),
+    [allTransactions, selected],
   );
   const summary = useMemo(() => summaryOf(transactions), [transactions]);
   const breakdown = useMemo(() => breakdownOf(transactions), [transactions]);
@@ -102,6 +139,21 @@ export default function Home() {
   const maxAmount = breakdown.length
     ? Math.max(...breakdown.map((item) => item.amount))
     : 0;
+
+  if (isLoading) {
+    return <DashboardSkeleton />;
+  }
+
+  if (error || !selected) {
+    return (
+      <main className="mx-auto max-w-5xl px-4 py-8">
+        <div className="rounded-xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-200">
+          <p className="font-medium">No se han podido cargar tus datos.</p>
+          <p className="mt-1">{error ?? "No hay movimientos registrados."}</p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main>
@@ -215,6 +267,44 @@ export default function Home() {
         <p className="mt-8 text-xs text-slate-400 dark:text-slate-500">
           Datos de ejemplo. Proximamente conectado a la API de FinanceTracker.
         </p>
+      </div>
+    </main>
+  );
+}
+
+function SkeletonCard() {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="h-4 w-20 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
+      <div className="mt-3 h-7 w-28 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
+    </div>
+  );
+}
+
+function DashboardSkeleton() {
+  return (
+    <main>
+      <div className="mx-auto max-w-5xl px-4 py-8">
+        <div className="h-8 w-40 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
+        <div className="mt-2 h-4 w-32 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
+
+        <div className="mt-6 flex flex-wrap gap-2">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <div
+              key={index}
+              className="h-9 w-14 animate-pulse rounded-lg bg-slate-200 dark:bg-slate-800"
+            />
+          ))}
+        </div>
+
+        <div className="mt-6 grid gap-4 sm:grid-cols-3">
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
+
+        <div className="mt-8 h-64 animate-pulse rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900" />
+        <div className="mt-8 h-52 animate-pulse rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900" />
       </div>
     </main>
   );

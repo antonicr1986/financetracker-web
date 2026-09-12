@@ -1,4 +1,10 @@
-import { mockBreakdown, mockSummary, mockTransactions } from "@/lib/mock";
+import MonthlyChart from "@/components/MonthlyChart";
+import {
+  mockBreakdown,
+  mockMonthly,
+  mockSummary,
+  mockTransactions,
+} from "@/lib/mock";
 import type { TransactionDto } from "@/lib/types";
 
 const currency = new Intl.NumberFormat("es-ES", {
@@ -85,6 +91,13 @@ export default function Home() {
           <SummaryCard label="Ingresos" value={mockSummary.totalIncome} tone="income" />
           <SummaryCard label="Gastos" value={mockSummary.totalExpense} tone="expense" />
           <SummaryCard label="Balance" value={mockSummary.balance} tone="balance" />
+        </section>
+
+        <section className="mt-8 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 className="mb-4 text-sm font-semibold text-slate-900">
+            Evolucion mensual
+          </h2>
+          <MonthlyChart data={mockMonthly} />
         </section>
 
         <section className="mt-8 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">

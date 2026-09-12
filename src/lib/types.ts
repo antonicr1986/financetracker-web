@@ -23,3 +23,9 @@ export interface CategoryBreakdown {
   categoryName: string;
   amount: number;
 }
+
+export interface MonthlyPoint {
+  month: string;
+  income: number;
+  expense: number;
+}

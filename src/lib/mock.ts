@@ -1,5 +1,6 @@
 import type {
   CategoryBreakdown,
+  MonthlyPoint,
   SummaryDto,
   TransactionDto,
 } from "./types";
@@ -94,4 +95,13 @@ export const mockBreakdown: CategoryBreakdown[] = [
   { categoryName: "Transporte", amount: 62.15 },
   { categoryName: "Suministros", amount: 54.9 },
   { categoryName: "Otros", amount: 18.25 },
+];
+
+export const mockMonthly: MonthlyPoint[] = [
+  { month: "Abr", income: 2100, expense: 1320.4 },
+  { month: "May", income: 2100, expense: 1189.75 },
+  { month: "Jun", income: 2340, expense: 1502.3 },
+  { month: "Jul", income: 2100, expense: 980.6 },
+  { month: "Ago", income: 2100, expense: 1744.9 },
+  { month: "Sep", income: 2220, expense: 1145.5 },
 ];

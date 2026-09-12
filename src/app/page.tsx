@@ -1,69 +1,147 @@
-import Image from "next/image";
+import { mockBreakdown, mockSummary, mockTransactions } from "@/lib/mock";
+import type { TransactionDto } from "@/lib/types";
+
+const currency = new Intl.NumberFormat("es-ES", {
+  style: "currency",
+  currency: "EUR",
+});
+
+const shortDate = new Intl.DateTimeFormat("es-ES", {
+  day: "2-digit",
+  month: "short",
+});
+
+function formatDate(iso: string) {
+  return shortDate.format(new Date(iso));
+}
+
+function SummaryCard({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number;
+  tone: "income" | "expense" | "balance";
+}) {
+  const toneClasses = {
+    income: "text-emerald-700",
+    expense: "text-rose-700",
+    balance: value >= 0 ? "text-slate-900" : "text-rose-700",
+  }[tone];
+
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <p className="text-sm font-medium text-slate-500">{label}</p>
+      <p className={`mt-2 text-2xl font-semibold tabular-nums ${toneClasses}`}>
+        {currency.format(value)}
+      </p>
+    </div>
+  );
+}
+
+function TransactionRow({ transaction }: { transaction: TransactionDto }) {
+  const isIncome = transaction.type === "Income";
+
+  return (
+    <tr className="border-t border-slate-100">
+      <td className="py-3 pr-4 text-sm text-slate-500 whitespace-nowrap">
+        {formatDate(transaction.date)}
+      </td>
+      <td className="py-3 pr-4 text-sm font-medium text-slate-900">
+        {transaction.description}
+      </td>
+      <td className="py-3 pr-4 text-sm text-slate-500">
+        {transaction.categoryName ?? "Sin categoria"}
+      </td>
+      <td
+        className={`py-3 text-right text-sm font-semibold tabular-nums whitespace-nowrap ${
+          isIncome ? "text-emerald-700" : "text-slate-900"
+        }`}
+      >
+        {isIncome ? "+" : "−"}
+        {currency.format(transaction.amount)}
+      </td>
+    </tr>
+  );
+}
 
 export default function Home() {
+  const maxAmount = Math.max(...mockBreakdown.map((item) => item.amount));
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the HOLA{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
+    <main className="min-h-screen bg-slate-50">
+      <div className="mx-auto max-w-5xl px-4 py-10">
+        <header className="mb-8">
+          <h1 className="text-2xl font-semibold text-slate-900">
+            FinanceTracker
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="mt-1 text-sm text-slate-500">
+            Resumen de septiembre de 2026
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation ACR
-          </a>
-        </div>
-      </main>
-    </div>
+        </header>
+
+        <section className="grid gap-4 sm:grid-cols-3">
+          <SummaryCard label="Ingresos" value={mockSummary.totalIncome} tone="income" />
+          <SummaryCard label="Gastos" value={mockSummary.totalExpense} tone="expense" />
+          <SummaryCard label="Balance" value={mockSummary.balance} tone="balance" />
+        </section>
+
+        <section className="mt-8 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 className="text-sm font-semibold text-slate-900">
+            Gastos por categoria
+          </h2>
+
+          <ul className="mt-4 space-y-3">
+            {mockBreakdown.map((item) => (
+              <li key={item.categoryName}>
+                <div className="flex items-baseline justify-between gap-4">
+                  <span className="text-sm text-slate-700">
+                    {item.categoryName}
+                  </span>
+                  <span className="text-sm tabular-nums text-slate-500">
+                    {currency.format(item.amount)}
+                  </span>
+                </div>
+                <div className="mt-1.5 h-2 rounded-full bg-slate-100">
+                  <div
+                    className="h-2 rounded-full bg-slate-700"
+                    style={{ width: `${(item.amount / maxAmount) * 100}%` }}
+                  />
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="mt-8 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 className="text-sm font-semibold text-slate-900">
+            Movimientos recientes
+          </h2>
+
+          <div className="mt-2 overflow-x-auto">
+            <table className="w-full min-w-[32rem]">
+              <thead>
+                <tr className="text-left text-xs font-medium tracking-wide text-slate-400 uppercase">
+                  <th className="py-2 pr-4 font-medium">Fecha</th>
+                  <th className="py-2 pr-4 font-medium">Concepto</th>
+                  <th className="py-2 pr-4 font-medium">Categoria</th>
+                  <th className="py-2 text-right font-medium">Importe</th>
+                </tr>
+              </thead>
+              <tbody>
+                {mockTransactions.map((transaction) => (
+                  <TransactionRow key={transaction.id} transaction={transaction} />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <p className="mt-8 text-xs text-slate-400">
+          Datos de ejemplo. Proximamente conectado a la API de FinanceTracker.
+        </p>
+      </div>
+    </main>
   );
 }

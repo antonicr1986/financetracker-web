@@ -66,8 +66,7 @@ jobs:
       url: https://financetracker-web.vercel.app
 
     env:
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
     steps:
       - uses: actions/checkout@v5
@@ -80,11 +79,15 @@ jobs:
       - name: Install the Vercel CLI
         run: npm install --global vercel@latest
 
+      # Enlazar por nombre evita depender de identificadores copiados a mano.
+      - name: Link the Vercel project
+        run: vercel link --yes --project financetracker-web --token=$VERCEL_TOKEN
+
       - name: Pull the production configuration
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel pull --yes --environment=production --token=$VERCEL_TOKEN
 
       - name: Build
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel build --prod --token=$VERCEL_TOKEN
 
       - name: Deploy
-        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN

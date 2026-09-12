@@ -1,10 +1,17 @@
+"use client";
+
+import { useMemo, useState } from "react";
 import MonthlyChart from "@/components/MonthlyChart";
+import { mockTransactions } from "@/lib/mock";
 import {
-  mockBreakdown,
-  mockMonthly,
-  mockSummary,
-  mockTransactions,
-} from "@/lib/mock";
+  availableMonths,
+  breakdownOf,
+  monthLongLabel,
+  monthShortLabel,
+  monthlySeries,
+  summaryOf,
+  transactionsOfMonth,
+} from "@/lib/derive";
 import type { TransactionDto } from "@/lib/types";
 
 const currency = new Intl.NumberFormat("es-ES", {
@@ -41,7 +48,9 @@ function SummaryCard({
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-      <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{label}</p>
+      <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+        {label}
+      </p>
       <p className={`mt-2 text-2xl font-semibold tabular-nums ${toneClasses}`}>
         {currency.format(value)}
       </p>
@@ -54,7 +63,7 @@ function TransactionRow({ transaction }: { transaction: TransactionDto }) {
 
   return (
     <tr className="border-t border-slate-100 dark:border-slate-800">
-      <td className="py-3 pr-4 text-sm text-slate-500 dark:text-slate-400 whitespace-nowrap dark:text-slate-400">
+      <td className="py-3 pr-4 text-sm whitespace-nowrap text-slate-500 dark:text-slate-400">
         {formatDate(transaction.date)}
       </td>
       <td className="py-3 pr-4 text-sm font-medium text-slate-900 dark:text-slate-100">
@@ -65,7 +74,9 @@ function TransactionRow({ transaction }: { transaction: TransactionDto }) {
       </td>
       <td
         className={`py-3 text-right text-sm font-semibold tabular-nums whitespace-nowrap ${
-          isIncome ? "text-emerald-700 dark:text-emerald-400" : "text-slate-900"
+          isIncome
+            ? "text-emerald-700 dark:text-emerald-400"
+            : "text-slate-900 dark:text-slate-100"
         }`}
       >
         {isIncome ? "+" : "−"}
@@ -76,31 +87,66 @@ function TransactionRow({ transaction }: { transaction: TransactionDto }) {
 }
 
 export default function Home() {
-  const maxAmount = Math.max(...mockBreakdown.map((item) => item.amount));
+  const months = useMemo(() => availableMonths(mockTransactions), []);
+  const [selected, setSelected] = useState(months[months.length - 1]);
+
+  const monthly = useMemo(() => monthlySeries(mockTransactions), []);
+
+  const transactions = useMemo(
+    () => transactionsOfMonth(mockTransactions, selected),
+    [selected],
+  );
+  const summary = useMemo(() => summaryOf(transactions), [transactions]);
+  const breakdown = useMemo(() => breakdownOf(transactions), [transactions]);
+
+  const maxAmount = breakdown.length
+    ? Math.max(...breakdown.map((item) => item.amount))
+    : 0;
 
   return (
     <main>
       <div className="mx-auto max-w-5xl px-4 py-8">
-        <header className="mb-8">
+        <header className="mb-6">
           <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-            FinanceTracker
+            Resumen
           </h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Resumen de septiembre de 2026
+            {monthLongLabel(selected)}
           </p>
         </header>
 
+        <div className="mb-6 flex flex-wrap gap-2">
+          {months.map((key) => {
+            const isSelected = key === selected;
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setSelected(key)}
+                aria-pressed={isSelected}
+                className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition ${
+                  isSelected
+                    ? "border-slate-900 bg-slate-900 text-white dark:border-slate-100 dark:bg-slate-100 dark:text-slate-900"
+                    : "border-slate-300 text-slate-600 hover:bg-white dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                }`}
+              >
+                {monthShortLabel(key)}
+              </button>
+            );
+          })}
+        </div>
+
         <section className="grid gap-4 sm:grid-cols-3">
-          <SummaryCard label="Ingresos" value={mockSummary.totalIncome} tone="income" />
-          <SummaryCard label="Gastos" value={mockSummary.totalExpense} tone="expense" />
-          <SummaryCard label="Balance" value={mockSummary.balance} tone="balance" />
+          <SummaryCard label="Ingresos" value={summary.totalIncome} tone="income" />
+          <SummaryCard label="Gastos" value={summary.totalExpense} tone="expense" />
+          <SummaryCard label="Balance" value={summary.balance} tone="balance" />
         </section>
 
         <section className="mt-8 rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <h2 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100 dark:text-slate-100">
+          <h2 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
             Evolucion mensual
           </h2>
-          <MonthlyChart data={mockMonthly} />
+          <MonthlyChart data={monthly} active={monthShortLabel(selected)} />
         </section>
 
         <section className="mt-8 rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
@@ -108,50 +154,62 @@ export default function Home() {
             Gastos por categoria
           </h2>
 
-          <ul className="mt-4 space-y-3">
-            {mockBreakdown.map((item) => (
-              <li key={item.categoryName}>
-                <div className="flex items-baseline justify-between gap-4">
-                  <span className="text-sm text-slate-700 dark:text-slate-300">
-                    {item.categoryName}
-                  </span>
-                  <span className="text-sm tabular-nums text-slate-500 dark:text-slate-400">
-                    {currency.format(item.amount)}
-                  </span>
-                </div>
-                <div className="mt-1.5 h-2 rounded-full bg-slate-100 dark:bg-slate-800">
-                  <div
-                    className="h-2 rounded-full bg-slate-700 dark:bg-slate-300"
-                    style={{ width: `${(item.amount / maxAmount) * 100}%` }}
-                  />
-                </div>
-              </li>
-            ))}
-          </ul>
+          {breakdown.length === 0 ? (
+            <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
+              No hay gastos registrados este mes.
+            </p>
+          ) : (
+            <ul className="mt-4 space-y-3">
+              {breakdown.map((item) => (
+                <li key={item.categoryName}>
+                  <div className="flex items-baseline justify-between gap-4">
+                    <span className="text-sm text-slate-700 dark:text-slate-300">
+                      {item.categoryName}
+                    </span>
+                    <span className="text-sm tabular-nums text-slate-500 dark:text-slate-400">
+                      {currency.format(item.amount)}
+                    </span>
+                  </div>
+                  <div className="mt-1.5 h-2 rounded-full bg-slate-100 dark:bg-slate-800">
+                    <div
+                      className="h-2 rounded-full bg-slate-700 dark:bg-slate-300"
+                      style={{ width: `${(item.amount / maxAmount) * 100}%` }}
+                    />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
 
         <section className="mt-8 rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
           <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-            Movimientos recientes
+            Movimientos de {monthShortLabel(selected).toLowerCase()}
           </h2>
 
-          <div className="mt-2 overflow-x-auto">
-            <table className="w-full min-w-[32rem]">
-              <thead>
-                <tr className="text-left text-xs font-medium tracking-wide text-slate-400 uppercase dark:text-slate-500">
-                  <th className="py-2 pr-4 font-medium">Fecha</th>
-                  <th className="py-2 pr-4 font-medium">Concepto</th>
-                  <th className="py-2 pr-4 font-medium">Categoria</th>
-                  <th className="py-2 text-right font-medium">Importe</th>
-                </tr>
-              </thead>
-              <tbody>
-                {mockTransactions.map((transaction) => (
-                  <TransactionRow key={transaction.id} transaction={transaction} />
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {transactions.length === 0 ? (
+            <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
+              No hay movimientos este mes.
+            </p>
+          ) : (
+            <div className="mt-2 overflow-x-auto">
+              <table className="w-full min-w-[32rem]">
+                <thead>
+                  <tr className="text-left text-xs font-medium tracking-wide text-slate-400 uppercase dark:text-slate-500">
+                    <th className="py-2 pr-4 font-medium">Fecha</th>
+                    <th className="py-2 pr-4 font-medium">Concepto</th>
+                    <th className="py-2 pr-4 font-medium">Categoria</th>
+                    <th className="py-2 text-right font-medium">Importe</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {transactions.map((transaction) => (
+                    <TransactionRow key={transaction.id} transaction={transaction} />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </section>
 
         <p className="mt-8 text-xs text-slate-400 dark:text-slate-500">

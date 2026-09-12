@@ -43,7 +43,13 @@ function Legend() {
   );
 }
 
-export default function MonthlyChart({ data }: { data: MonthlyPoint[] }) {
+export default function MonthlyChart({
+  data,
+  active,
+}: {
+  data: MonthlyPoint[];
+  active?: string;
+}) {
   const [hovered, setHovered] = useState<number | null>(null);
 
   const max = niceCeil(
@@ -84,7 +90,11 @@ export default function MonthlyChart({ data }: { data: MonthlyPoint[] }) {
                   onMouseEnter={() => setHovered(index)}
                   onMouseLeave={() => setHovered(null)}
                   className={`flex h-full flex-1 items-end justify-center gap-1 transition-colors ${
-                    hovered === index ? "bg-slate-100 dark:bg-slate-800" : ""
+                    hovered === index
+                      ? "bg-slate-100 dark:bg-slate-800"
+                      : point.month === active
+                        ? "bg-slate-50 dark:bg-slate-800/50"
+                        : ""
                   }`}
                 >
                   <div
@@ -111,7 +121,11 @@ export default function MonthlyChart({ data }: { data: MonthlyPoint[] }) {
             {data.map((point) => (
               <span
                 key={point.month}
-                className="flex-1 pt-2 text-center text-[11px] text-slate-500 dark:text-slate-400"
+                className={`flex-1 pt-2 text-center text-[11px] ${
+                  point.month === active
+                    ? "font-semibold text-slate-900 dark:text-slate-100"
+                    : "text-slate-500 dark:text-slate-400"
+                }`}
               >
                 {point.month}
               </span>

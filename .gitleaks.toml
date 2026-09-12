@@ -1,0 +1,16 @@
+[extend]
+useDefault = true
+
+[allowlist]
+paths = [
+  '''(?i)(^|/)node_modules/''',
+  '''(?i)(^|/)tests?/''',
+  '''(?i)\.md$''',
+  '''(?i)\.example($|\.)''',
+  '''(?i)(^|/)package-lock\.json$''',
+]
+
+[[rules]]
+id = "hardcoded-token-assignment"
+description = "Possible credential assigned in source code"
+regex = '''(?i)(?:const|let|var)\s+\w*(?:token|secret|password|apikey|api_key)\w*\s*[:=]\s*["'][^"']{8,}["']'''

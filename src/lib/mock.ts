@@ -4,8 +4,8 @@ import type {
   TransactionDto,
 } from "./types";
 
-// Datos de ejemplo mientras la API no esta desplegada.
-// Se sustituyen por llamadas reales sin tocar los componentes.
+// Sample data used until the API is deployed.
+// Replaced by real calls without touching the components.
 
 export const mockTransactions: TransactionDto[] = [
   {

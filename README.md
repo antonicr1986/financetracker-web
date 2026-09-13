@@ -3,7 +3,7 @@
 **English** · [Español](README.es.md)
 
 ![CI](https://img.shields.io/github/actions/workflow/status/antonicr1986/financetracker-web/ci.yml?branch=main&style=for-the-badge&label=CI%2FCD&logo=githubactions&logoColor=white)
-[![Demo](https://img.shields.io/badge/demo-online-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://financetracker-web.vercel.app)
+[![Demo](https://img.shields.io/badge/demo-online-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://financetracker-web-tau.vercel.app)
 ![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
@@ -11,7 +11,7 @@
 Web client for [FinanceTracker](https://github.com/antonicr1986/FinanceTracker),
 a personal finance REST API built with .NET 8.
 
-**[View the live application](https://financetracker-web.vercel.app)**
+**[View the live application](https://financetracker-web-tau.vercel.app)**
 
 ## 🚧 Status
 

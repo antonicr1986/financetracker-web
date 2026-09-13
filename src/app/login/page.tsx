@@ -2,6 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { login, setToken, isUsingMockData } from "@/lib/api/client";
+import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -16,24 +18,38 @@ export default function LoginPage() {
     setError(null);
 
     if (!email || !password) {
-      setError("Introduce tu correo y tu contrase\u00f1a.");
+      setError("Introduce tu correo y tu contraseña.");
       return;
     }
 
     setIsSubmitting(true);
 
-    // TODO: replace with a real call to the FinanceTracker API.
-    await new Promise((resolve) => setTimeout(resolve, 600));
-
-    setIsSubmitting(false);
-    router.push("/");
+    try {
+      const response = await login(email, password);
+      setToken(response.token);
+      router.push("/");
+    } catch (cause: unknown) {
+      if (cause instanceof Error) {
+        setError(cause.message);
+      } else {
+        setError(
+          isUsingMockData
+            ? "No se ha podido iniciar sesión."
+            : "No se ha podido contactar con el servidor."
+        );
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4 dark:bg-slate-950">
       <div className="w-full max-w-sm">
         <div className="mb-6 text-center">
-          <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">FinanceTracker</h1>
+          <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+            FinanceTracker
+          </h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             Accede para ver tus finanzas
           </p>
@@ -48,7 +64,7 @@ export default function LoginPage() {
             htmlFor="email"
             className="block text-sm font-medium text-slate-700 dark:text-slate-300"
           >
-            Correo electr&oacute;nico
+            Correo electrónico
           </label>
           <input
             id="email"
@@ -56,7 +72,8 @@ export default function LoginPage() {
             autoComplete="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-600 dark:focus:border-slate-500 dark:focus:ring-slate-800"
+            disabled={isSubmitting}
+            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-600 dark:focus:border-slate-500 dark:focus:ring-slate-800 dark:disabled:bg-slate-900 dark:disabled:text-slate-500"
             placeholder="tu@correo.com"
           />
 
@@ -64,7 +81,7 @@ export default function LoginPage() {
             htmlFor="password"
             className="mt-4 block text-sm font-medium text-slate-700 dark:text-slate-300"
           >
-            Contrase&ntilde;a
+            Contraseña
           </label>
           <input
             id="password"
@@ -72,7 +89,8 @@ export default function LoginPage() {
             autoComplete="current-password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-600 dark:focus:border-slate-500 dark:focus:ring-slate-800"
+            disabled={isSubmitting}
+            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-600 dark:focus:border-slate-500 dark:focus:ring-slate-800 dark:disabled:bg-slate-900 dark:disabled:text-slate-500"
             placeholder="********"
           />
 
@@ -82,6 +100,19 @@ export default function LoginPage() {
               className="mt-4 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:bg-rose-950 dark:text-rose-300"
             >
               {error}
+            </p>
+          )}
+
+          {isUsingMockData && (
+            <p className="mt-4 rounded-lg bg-blue-50 px-3 py-2 text-sm text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+              <strong>Modo demostración:</strong> Usa cualquier correo y contraseña.{" "}
+              <Link
+                href="/settings"
+                className="underline hover:no-underline dark:text-blue-200"
+              >
+                Configura la API aquí
+              </Link>
+              .
             </p>
           )}
 
@@ -95,7 +126,9 @@ export default function LoginPage() {
         </form>
 
         <p className="mt-4 text-center text-xs text-slate-400 dark:text-slate-500">
-          Demo sin backend. Cualquier dato te deja pasar.
+          {isUsingMockData
+            ? "Modo demostración sin conexión a API"
+            : "Conectado a la API"}
         </p>
       </div>
     </main>

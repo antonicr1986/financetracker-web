@@ -1,20 +1,21 @@
 import type { TransactionDto } from "@/lib/types";
 import { mockTransactions } from "@/lib/mock";
 
-/**
- * Base URL of the FinanceTracker API.
- *
- * When it is not set, the app falls back to sample data. That is what keeps
- * the deployed demo working before the backend exists: set the variable in
- * Vercel and the same build starts talking to the real API, with no code
- * change.
- */
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
-
-export const isUsingMockData = !BASE_URL;
-
-// Nombre de la clave en localStorage, no una credencial.
+const API_URL_STORAGE_KEY = "financetracker.api.url";
 const TOKEN_KEY = "financetracker.token"; // gitleaks:allow
+
+/**
+ * Get the configured API URL from localStorage.
+ * If not configured, returns null and the app uses mock data.
+ */
+function getApiUrl(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return localStorage.getItem(API_URL_STORAGE_KEY) || null;
+  } catch {
+    return null;
+  }
+}
 
 export function getToken(): string | null {
   if (typeof window === "undefined") return null;
@@ -35,6 +36,8 @@ export function setToken(token: string | null) {
   }
 }
 
+export const isUsingMockData = !getApiUrl();
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -46,9 +49,15 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const baseUrl = getApiUrl();
+
+  if (!baseUrl) {
+    throw new Error("API no configurada. Ve a Configuración para establecer la URL.");
+  }
+
   const token = getToken();
 
-  const response = await fetch(`${BASE_URL}${path}`, {
+  const response = await fetch(`${baseUrl}${path}`, {
     ...init,
     headers: {
       "Content-Type": "application/json",
@@ -58,12 +67,15 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   });
 
   if (!response.ok) {
-    throw new ApiError(
+    const message =
       response.status === 401
-        ? "Tu sesion ha caducado."
-        : "No se ha podido contactar con el servidor.",
-      response.status,
-    );
+        ? "Tu sesión ha caducado. Por favor, inicia sesión de nuevo."
+        : response.status === 400
+          ? "Datos inválidos."
+          : response.status === 500
+            ? "Error del servidor. Intenta más tarde."
+            : "No se ha podido contactar con el servidor.";
+    throw new ApiError(message, response.status);
   }
 
   return (await response.json()) as T;
@@ -80,8 +92,7 @@ export async function getTransactions(): Promise<TransactionDto[]> {
     return mockTransactions;
   }
 
-  // TODO: the real endpoint is paginated and returns { items, totalCount, ... }.
-  // Unwrap it here so the components keep receiving a plain list.
+  // The real endpoint returns a list of transactions
   return request<TransactionDto[]>("/api/Transactions");
 }
 
@@ -94,8 +105,11 @@ export async function login(
     return { token: "mock-token" };
   }
 
-  return request<{ token: string }>("/api/Auth/login", {
+  // Real endpoint: POST /api/Users/login
+  const response = await request<{ token: string }>("/api/Users/login", {
     method: "POST",
     body: JSON.stringify({ email, password }),
   });
+
+  return response;
 }

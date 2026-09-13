@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import MonthlyChart from "@/components/MonthlyChart";
-import { getTransactions } from "@/lib/api/client";
+import { getTransactions, isUsingMockData } from "@/lib/api/client";
 import {
   availableMonths,
   breakdownOf,
@@ -87,6 +88,7 @@ function TransactionRow({ transaction }: { transaction: TransactionDto }) {
 }
 
 export default function Home() {
+  const router = useRouter();
   const [allTransactions, setAllTransactions] = useState<TransactionDto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -104,11 +106,16 @@ export default function Home() {
       })
       .catch((cause: unknown) => {
         if (cancelled) return;
-        setError(
+        const message =
           cause instanceof Error
             ? cause.message
-            : "No se han podido cargar los datos.",
-        );
+            : "No se han podido cargar los datos.";
+        setError(message);
+
+        // If API is not configured and not in mock mode, redirect to settings
+        if (message.includes("API no configurada")) {
+          setTimeout(() => router.push("/settings"), 2000);
+        }
       })
       .finally(() => {
         if (!cancelled) setIsLoading(false);
@@ -117,7 +124,7 @@ export default function Home() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [router]);
 
   const months = useMemo(
     () => availableMonths(allTransactions),
@@ -144,12 +151,28 @@ export default function Home() {
     return <DashboardSkeleton />;
   }
 
-  if (error || !selected) {
+  if (error) {
     return (
       <main className="mx-auto max-w-5xl px-4 py-8">
         <div className="rounded-xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-200">
-          <p className="font-medium">No se han podido cargar tus datos.</p>
-          <p className="mt-1">{error ?? "No hay movimientos registrados."}</p>
+          <p className="font-medium">Error al cargar los datos</p>
+          <p className="mt-1">{error}</p>
+          {error.includes("API no configurada") && (
+            <p className="mt-2 text-xs">
+              Redirigiendo a Configuración en 2 segundos...
+            </p>
+          )}
+        </div>
+      </main>
+    );
+  }
+
+  if (!selected) {
+    return (
+      <main className="mx-auto max-w-5xl px-4 py-8">
+        <div className="rounded-xl border border-slate-200 bg-white p-5 text-sm text-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200">
+          <p className="font-medium">No hay datos disponibles</p>
+          <p className="mt-1">No hay movimientos registrados aún.</p>
         </div>
       </main>
     );
@@ -158,6 +181,22 @@ export default function Home() {
   return (
     <main>
       <div className="mx-auto max-w-5xl px-4 py-8">
+        {isUsingMockData && (
+          <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-200">
+            <p className="font-medium">Modo demostración</p>
+            <p className="mt-1">
+              Estás usando datos de demostración. Ve a{" "}
+              <a
+                href="/settings"
+                className="font-semibold underline hover:no-underline"
+              >
+                Configuración
+              </a>{" "}
+              para conectar tu API real.
+            </p>
+          </div>
+        )}
+
         <header className="mb-6">
           <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
             Resumen
@@ -263,10 +302,6 @@ export default function Home() {
             </div>
           )}
         </section>
-
-        <p className="mt-8 text-xs text-slate-400 dark:text-slate-500">
-          Datos de ejemplo. Proximamente conectado a la API de FinanceTracker.
-        </p>
       </div>
     </main>
   );

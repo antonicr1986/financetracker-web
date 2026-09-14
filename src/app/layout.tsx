@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Script from "next/script";
+import ThemeScript from "./theme-script";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -18,19 +18,6 @@ export const metadata: Metadata = {
   description: "Track your finances with ease",
 };
 
-// Se ejecuta antes de pintar, para que la pagina no parpadee en blanco
-// cuando el usuario tiene el tema oscuro guardado.
-const themeScript = `
-(function () {
-  try {
-    var stored = localStorage.getItem("theme");
-    var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    if (stored === "dark" || (!stored && prefersDark)) {
-      document.documentElement.classList.add("dark");
-    }
-  } catch (e) {}
-})();
-`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
@@ -39,14 +26,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <head>
-        <Script
-          id="theme-init"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{ __html: themeScript }}
-        />
-      </head>
       <body className="flex min-h-full flex-col bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+        <ThemeScript />
         {children}
       </body>
     </html>

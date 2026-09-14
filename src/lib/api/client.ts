@@ -1,4 +1,4 @@
-import type { TransactionDto } from "@/lib/types";
+import type { PagedResult, TransactionDto } from "@/lib/types";
 import { mockTransactions } from "@/lib/mock";
 
 const API_URL_STORAGE_KEY = "financetracker.api.url";
@@ -92,8 +92,13 @@ export async function getTransactions(): Promise<TransactionDto[]> {
     return mockTransactions;
   }
 
-  // The real endpoint returns a list of transactions
-  return request<TransactionDto[]>("/api/Transactions");
+  // The real endpoint wraps the list in a PagedResult envelope.
+  // El endpoint pagina con pageSize 10 por defecto; el panel necesita el
+  // historico completo para calcular la evolucion mensual.
+  const page = await request<PagedResult<TransactionDto>>(
+    "/api/Transactions?pageNumber=1&pageSize=500",
+  );
+  return page.items ?? [];
 }
 
 export async function login(

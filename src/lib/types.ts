@@ -29,3 +29,12 @@ export interface MonthlyPoint {
   income: number;
   expense: number;
 }
+
+/** Envelope returned by list endpoints (mirrors PagedResult<T> on the API). */
+export interface PagedResult<T> {
+  items: T[];
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
+  totalPages: number;
+}

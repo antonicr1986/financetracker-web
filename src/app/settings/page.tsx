@@ -1,206 +1,203 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { getToken, setToken } from "@/lib/api/client";
 
 const STORAGE_KEY = "financetracker.api.url";
 
 export default function SettingsPage() {
-  const router = useRouter();
-  const [apiUrl, setApiUrl] = useState("");
-  const [isSaved, setIsSaved] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isTesting, setIsTesting] = useState(false);
-  const [testResult, setTestResult] = useState<string | null>(null);
-  const token = getToken();
+    const router = useRouter();
+    const [apiUrl, setApiUrl] = useState(() => {
+        if (typeof window !== "undefined") {
+            return localStorage.getItem(STORAGE_KEY) || "";
+        }
+        return "";
+    });
+    const [isSaved, setIsSaved] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [isTesting, setIsTesting] = useState(false);
+    const [testResult, setTestResult] = useState<string | null>(null);
+    const token = getToken();
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem(STORAGE_KEY) || "";
-      setApiUrl(saved);
+    async function handleSave(e: React.FormEvent) {
+        e.preventDefault();
+        setError(null);
+        setIsSaved(false);
+
+        if (!apiUrl.trim()) {
+            setError("Por favor ingresa una URL válida.");
+            return;
+        }
+
+        try {
+            if (typeof window !== "undefined") {
+                localStorage.setItem(STORAGE_KEY, apiUrl);
+                setIsSaved(true);
+                setTimeout(() => setIsSaved(false), 3000);
+            }
+        } catch {
+            setError("No se pudo guardar la configuración.");
+        }
     }
-  }, []);
 
-  async function handleSave(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-    setIsSaved(false);
+    async function handleTestConnection() {
+        setIsTesting(true);
+        setTestResult(null);
 
-    if (!apiUrl.trim()) {
-      setError("Por favor ingresa una URL válida.");
-      return;
+        try {
+            const response = await fetch(`${apiUrl}/api/Users/login`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    email: "test@example.com",
+                    password: "test",
+                }),
+            });
+
+            if (response.status === 401) {
+                setTestResult("✓ Conexión exitosa (credenciales inválidas, pero el servidor responde)");
+            } else if (response.ok) {
+                setTestResult("✓ Conexión exitosa");
+            } else {
+                setTestResult(
+                    `✗ Error del servidor: ${response.status} ${response.statusText}`
+                );
+            }
+        } catch (err) {
+            setTestResult(
+                `✗ No se pudo conectar: ${err instanceof Error ? err.message : "Error desconocido"}`
+            );
+        } finally {
+            setIsTesting(false);
+        }
     }
 
-    try {
-      if (typeof window !== "undefined") {
-        localStorage.setItem(STORAGE_KEY, apiUrl);
-        setIsSaved(true);
-        setTimeout(() => setIsSaved(false), 3000);
-      }
-    } catch (err) {
-      setError("No se pudo guardar la configuración.");
+    function handleLogout() {
+        setToken(null);
+        router.push("/login");
     }
-  }
 
-  async function handleTestConnection() {
-    setIsTesting(true);
-    setTestResult(null);
+    return (
+        <main className="min-h-screen bg-slate-50 dark:bg-slate-950">
+            <div className="mx-auto max-w-2xl px-4 py-8">
+                <header className="mb-8">
+                    <h1 className="text-3xl font-semibold text-slate-900 dark:text-slate-100">
+                        Configuración
+                    </h1>
+                    <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+                        Configura la conexión a la API de FinanceTracker
+                    </p>
+                </header>
 
-    try {
-      const response = await fetch(`${apiUrl}/api/Users/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: "test@example.com",
-          password: "test",
-        }),
-      });
+                <div className="space-y-6">
+                    {/* API Configuration */}
+                    <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                        <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">
+                            Conexión a API
+                        </h2>
 
-      if (response.status === 401) {
-        setTestResult("✓ Conexión exitosa (credenciales inválidas, pero el servidor responde)");
-      } else if (response.ok) {
-        setTestResult("✓ Conexión exitosa");
-      } else {
-        setTestResult(
-          `✗ Error del servidor: ${response.status} ${response.statusText}`
-        );
-      }
-    } catch (err) {
-      setTestResult(
-        `✗ No se pudo conectar: ${err instanceof Error ? err.message : "Error desconocido"}`
-      );
-    } finally {
-      setIsTesting(false);
-    }
-  }
+                        <form onSubmit={handleSave} className="space-y-4">
+                            <div>
+                                <label
+                                    htmlFor="apiUrl"
+                                    className="block text-sm font-medium text-slate-700 dark:text-slate-300"
+                                >
+                                    URL de la API
+                                </label>
+                                <input
+                                    id="apiUrl"
+                                    type="url"
+                                    value={apiUrl}
+                                    onChange={(e) => setApiUrl(e.target.value)}
+                                    placeholder="https://api.example.com"
+                                    className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-slate-500 dark:focus:ring-slate-800"
+                                />
+                                <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+                                    Ejemplo: http://localhost:5000 o https://api.tu-dominio.com
+                                </p>
+                            </div>
 
-  function handleLogout() {
-    setToken(null);
-    router.push("/login");
-  }
+                            {error && (
+                                <div className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:bg-rose-950 dark:text-rose-300">
+                                    {error}
+                                </div>
+                            )}
 
-  return (
-    <main className="min-h-screen bg-slate-50 dark:bg-slate-950">
-      <div className="mx-auto max-w-2xl px-4 py-8">
-        <header className="mb-8">
-          <h1 className="text-3xl font-semibold text-slate-900 dark:text-slate-100">
-            Configuración
-          </h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Configura la conexión a la API de FinanceTracker
-          </p>
-        </header>
+                            {isSaved && (
+                                <div className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                                    ✓ Configuración guardada correctamente
+                                </div>
+                            )}
 
-        <div className="space-y-6">
-          {/* API Configuration */}
-          <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">
-              Conexión a API
-            </h2>
+                            <div className="flex gap-3 pt-2">
+                                <button
+                                    type="submit"
+                                    className="flex-1 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
+                                >
+                                    Guardar
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleTestConnection}
+                                    disabled={!apiUrl || isTesting}
+                                    className="flex-1 rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:disabled:bg-slate-800 dark:disabled:text-slate-500"
+                                >
+                                    {isTesting ? "Probando..." : "Probar conexión"}
+                                </button>
+                            </div>
 
-            <form onSubmit={handleSave} className="space-y-4">
-              <div>
-                <label
-                  htmlFor="apiUrl"
-                  className="block text-sm font-medium text-slate-700 dark:text-slate-300"
-                >
-                  URL de la API
-                </label>
-                <input
-                  id="apiUrl"
-                  type="url"
-                  value={apiUrl}
-                  onChange={(e) => setApiUrl(e.target.value)}
-                  placeholder="https://api.example.com"
-                  className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-slate-500 dark:focus:ring-slate-800"
-                />
-                <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
-                  Ejemplo: http://localhost:5000 o https://api.tu-dominio.com
-                </p>
-              </div>
+                            {testResult && (
+                                <div
+                                    className={`rounded-lg px-3 py-2 text-sm ${testResult.startsWith("✓")
+                                            ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+                                            : "bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-300"
+                                        }`}
+                                >
+                                    {testResult}
+                                </div>
+                            )}
+                        </form>
+                    </section>
 
-              {error && (
-                <div className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:bg-rose-950 dark:text-rose-300">
-                  {error}
+                    {/* Current Status */}
+                    <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                        <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">
+                            Estado
+                        </h2>
+
+                        <div className="space-y-3">
+                            <div>
+                                <p className="text-sm text-slate-500 dark:text-slate-400">
+                                    API URL
+                                </p>
+                                <p className="mt-1 font-mono text-sm text-slate-900 dark:text-slate-100">
+                                    {apiUrl || "No configurada"}
+                                </p>
+                            </div>
+
+                            <div>
+                                <p className="text-sm text-slate-500 dark:text-slate-400">
+                                    Sesión
+                                </p>
+                                <p className="mt-1 text-sm text-slate-900 dark:text-slate-100">
+                                    {token ? "Activa" : "Inactiva"}
+                                </p>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Logout */}
+                    <button
+                        onClick={handleLogout}
+                        className="w-full rounded-lg border border-rose-300 px-4 py-2.5 text-sm font-medium text-rose-700 transition hover:bg-rose-50 dark:border-rose-700 dark:text-rose-300 dark:hover:bg-rose-950"
+                    >
+                        Cerrar sesión
+                    </button>
                 </div>
-              )}
-
-              {isSaved && (
-                <div className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-                  ✓ Configuración guardada correctamente
-                </div>
-              )}
-
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="submit"
-                  className="flex-1 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
-                >
-                  Guardar
-                </button>
-                <button
-                  type="button"
-                  onClick={handleTestConnection}
-                  disabled={!apiUrl || isTesting}
-                  className="flex-1 rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:disabled:bg-slate-800 dark:disabled:text-slate-500"
-                >
-                  {isTesting ? "Probando..." : "Probar conexión"}
-                </button>
-              </div>
-
-              {testResult && (
-                <div
-                  className={`rounded-lg px-3 py-2 text-sm ${
-                    testResult.startsWith("✓")
-                      ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
-                      : "bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-300"
-                  }`}
-                >
-                  {testResult}
-                </div>
-              )}
-            </form>
-          </section>
-
-          {/* Current Status */}
-          <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">
-              Estado
-            </h2>
-
-            <div className="space-y-3">
-              <div>
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                  API URL
-                </p>
-                <p className="mt-1 font-mono text-sm text-slate-900 dark:text-slate-100">
-                  {apiUrl || "No configurada"}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                  Sesión
-                </p>
-                <p className="mt-1 text-sm text-slate-900 dark:text-slate-100">
-                  {token ? "Activa" : "Inactiva"}
-                </p>
-              </div>
             </div>
-          </section>
-
-          {/* Logout */}
-          <button
-            onClick={handleLogout}
-            className="w-full rounded-lg border border-rose-300 px-4 py-2.5 text-sm font-medium text-rose-700 transition hover:bg-rose-50 dark:border-rose-700 dark:text-rose-300 dark:hover:bg-rose-950"
-          >
-            Cerrar sesión
-          </button>
-        </div>
-      </div>
-    </main>
-  );
+        </main>
+    );
 }

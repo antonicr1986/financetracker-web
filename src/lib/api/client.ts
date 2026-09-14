@@ -92,13 +92,25 @@ export async function getTransactions(): Promise<TransactionDto[]> {
     return mockTransactions;
   }
 
-  // The real endpoint wraps the list in a PagedResult envelope.
-  // El endpoint pagina con pageSize 10 por defecto; el panel necesita el
-  // historico completo para calcular la evolucion mensual.
-  const page = await request<PagedResult<TransactionDto>>(
-    "/api/Transactions?pageNumber=1&pageSize=500",
-  );
-  return page.items ?? [];
+  // El endpoint devuelve un PagedResult y limita pageSize a 100, pero el panel
+  // necesita el historico completo para la evolucion mensual: recorremos las
+  // paginas hasta agotarlas.
+  const pageSize = 100;
+  const all: TransactionDto[] = [];
+  let pageNumber = 1;
+  let totalPages = 1;
+
+  do {
+    const page = await request<PagedResult<TransactionDto>>(
+      `/api/Transactions?pageNumber=${pageNumber}&pageSize=${pageSize}`,
+    );
+
+    all.push(...(page.items ?? []));
+    totalPages = page.totalPages || 1;
+    pageNumber += 1;
+  } while (pageNumber <= totalPages);
+
+  return all;
 }
 
 export async function login(

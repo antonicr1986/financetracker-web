@@ -5,6 +5,11 @@ import { useState, type FormEvent } from "react";
 import { login, setToken, isUsingMockData } from "@/lib/api/client";
 import Link from "next/link";
 
+// Cuenta publica de solo lectura sembrada por el backend (DemoDataSeeder),
+// para que cualquiera pueda echar un vistazo sin registrarse.
+const DEMO_EMAIL = "demo@financetracker.app";
+const DEMO_PASSWORD = "Demo1234!"; // gitleaks:allow
+
 export default function LoginPage() {
   const router = useRouter();
 
@@ -13,11 +18,10 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function signIn(emailToUse: string, passwordToUse: string) {
     setError(null);
 
-    if (!email || !password) {
+    if (!emailToUse || !passwordToUse) {
       setError("Introduce tu correo y tu contraseña.");
       return;
     }
@@ -25,7 +29,7 @@ export default function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      const response = await login(email, password);
+      const response = await login(emailToUse, passwordToUse);
       setToken(response.token);
       router.push("/");
     } catch (cause: unknown) {
@@ -41,6 +45,18 @@ export default function LoginPage() {
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    await signIn(email, password);
+  }
+
+  // Rellena el formulario a la vista del usuario y entra directamente.
+  async function handleDemoLogin() {
+    setEmail(DEMO_EMAIL);
+    setPassword(DEMO_PASSWORD);
+    await signIn(DEMO_EMAIL, DEMO_PASSWORD);
   }
 
   return (
@@ -123,6 +139,25 @@ export default function LoginPage() {
           >
             {isSubmitting ? "Entrando..." : "Entrar"}
           </button>
+
+          <div className="mt-4 flex items-center gap-3">
+            <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+            <span className="text-xs text-slate-400 dark:text-slate-500">o</span>
+            <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+          </div>
+
+          <button
+            type="button"
+            onClick={handleDemoLogin}
+            disabled={isSubmitting}
+            className="mt-4 w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-400 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 dark:disabled:text-slate-500"
+          >
+            Entrar con la cuenta de demostración
+          </button>
+
+          <p className="mt-2 text-center text-xs text-slate-400 dark:text-slate-500">
+            {DEMO_EMAIL} / {DEMO_PASSWORD}
+          </p>
         </form>
 
         <p className="mt-4 text-center text-xs text-slate-400 dark:text-slate-500">

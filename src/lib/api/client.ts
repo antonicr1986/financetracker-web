@@ -36,7 +36,15 @@ export function setToken(token: string | null) {
   }
 }
 
-export const isUsingMockData = !getApiUrl();
+/**
+ * Hay API configurada o seguimos con datos de ejemplo. Es una funcion y no una
+ * constante a proposito: como constante se evaluaba una sola vez al cargar el
+ * modulo, daba true en el servidor (no hay localStorage) y false en el cliente,
+ * y esa divergencia rompia la hidratacion.
+ */
+export function isUsingMockData(): boolean {
+  return !getApiUrl();
+}
 
 export class ApiError extends Error {
   constructor(
@@ -87,7 +95,7 @@ function delay(ms: number) {
 }
 
 export async function getTransactions(): Promise<TransactionDto[]> {
-  if (isUsingMockData) {
+  if (isUsingMockData()) {
     await delay(400);
     return mockTransactions;
   }
@@ -117,7 +125,7 @@ export async function login(
   email: string,
   password: string,
 ): Promise<{ token: string }> {
-  if (isUsingMockData) {
+  if (isUsingMockData()) {
     await delay(500);
     return { token: "mock-token" };
   }

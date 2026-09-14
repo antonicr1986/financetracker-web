@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { login, setToken, isUsingMockData } from "@/lib/api/client";
+import { useMockMode } from "@/lib/useMockMode";
 import Link from "next/link";
 
 // Cuenta publica de solo lectura sembrada por el backend (DemoDataSeeder),
@@ -12,6 +13,7 @@ const DEMO_PASSWORD = "Demo1234!"; // gitleaks:allow
 
 export default function LoginPage() {
   const router = useRouter();
+  const mockMode = useMockMode();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -37,7 +39,7 @@ export default function LoginPage() {
         setError(cause.message);
       } else {
         setError(
-          isUsingMockData
+          isUsingMockData()
             ? "No se ha podido iniciar sesión."
             : "No se ha podido contactar con el servidor."
         );
@@ -119,7 +121,7 @@ export default function LoginPage() {
             </p>
           )}
 
-          {isUsingMockData && (
+          {mockMode && (
             <p className="mt-4 rounded-lg bg-blue-50 px-3 py-2 text-sm text-blue-700 dark:bg-blue-950 dark:text-blue-300">
               <strong>Modo demostración:</strong> Usa cualquier correo y contraseña.{" "}
               <Link
@@ -161,7 +163,7 @@ export default function LoginPage() {
         </form>
 
         <p className="mt-4 text-center text-xs text-slate-400 dark:text-slate-500">
-          {isUsingMockData
+          {mockMode
             ? "Modo demostración sin conexión a API"
             : "Conectado a la API"}
         </p>

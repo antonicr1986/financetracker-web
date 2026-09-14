@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import MonthlyChart from "@/components/MonthlyChart";
-import { getTransactions, isUsingMockData } from "@/lib/api/client";
+import { getTransactions } from "@/lib/api/client";
+import { useMockMode } from "@/lib/useMockMode";
 import {
   availableMonths,
   breakdownOf,
@@ -89,6 +90,7 @@ function TransactionRow({ transaction }: { transaction: TransactionDto }) {
 
 export default function Home() {
   const router = useRouter();
+  const mockMode = useMockMode();
   const [allTransactions, setAllTransactions] = useState<TransactionDto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -181,7 +183,7 @@ export default function Home() {
   return (
     <main>
       <div className="mx-auto max-w-5xl px-4 py-8">
-        {isUsingMockData && (
+        {mockMode && (
           <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-200">
             <p className="font-medium">Modo demostración</p>
             <p className="mt-1">

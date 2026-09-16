@@ -1,6 +1,7 @@
 import Link from "next/link";
 import ThemeToggle from "@/components/ThemeToggle";
 import CurrentUserEmail from "@/components/CurrentUserEmail";
+import HeaderNavLink from "@/components/HeaderNavLink";
 
 export default function AppLayout({
   children,
@@ -21,12 +22,7 @@ export default function AppLayout({
           <div className="flex items-center gap-3">
             <CurrentUserEmail />
             <ThemeToggle />
-            <Link
-              href="/settings"
-              className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
-            >
-              Configuración
-            </Link>
+            <HeaderNavLink />
             <Link
               href="/login"
               className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"

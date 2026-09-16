@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { login, setToken, isUsingMockData } from "@/lib/api/client";
+import { login, setToken, setUser, isUsingMockData } from "@/lib/api/client";
 import { useMockMode } from "@/lib/useMockMode";
 import Link from "next/link";
 
@@ -33,6 +33,7 @@ export default function LoginPage() {
     try {
       const response = await login(emailToUse, passwordToUse);
       setToken(response.token);
+      setUser(response.user ?? null);
       router.push("/");
     } catch (cause: unknown) {
       if (cause instanceof Error) {

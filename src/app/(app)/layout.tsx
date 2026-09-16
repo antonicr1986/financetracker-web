@@ -1,5 +1,6 @@
 import Link from "next/link";
 import ThemeToggle from "@/components/ThemeToggle";
+import CurrentUserEmail from "@/components/CurrentUserEmail";
 
 export default function AppLayout({
   children,
@@ -18,9 +19,7 @@ export default function AppLayout({
           </Link>
 
           <div className="flex items-center gap-3">
-            <span className="hidden text-sm text-slate-500 sm:inline dark:text-slate-400">
-              demo@financetracker.app
-            </span>
+            <CurrentUserEmail />
             <ThemeToggle />
             <Link
               href="/settings"

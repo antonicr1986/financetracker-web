@@ -1,8 +1,14 @@
-import type { PagedResult, TransactionDto } from "@/lib/types";
+import type {
+  LoginResponseDto,
+  PagedResult,
+  TransactionDto,
+  UserDto,
+} from "@/lib/types";
 import { mockTransactions } from "@/lib/mock";
 
 const API_URL_STORAGE_KEY = "financetracker.api.url";
 const TOKEN_KEY = "financetracker.token"; // gitleaks:allow
+const USER_KEY = "financetracker.user";
 
 /**
  * Get the configured API URL from localStorage.
@@ -23,6 +29,41 @@ export function getToken(): string | null {
     return localStorage.getItem(TOKEN_KEY);
   } catch {
     return null;
+  }
+}
+
+/**
+ * Devuelve el usuario guardado tal cual esta en localStorage, sin parsear.
+ * Se expone la cadena cruda porque useSyncExternalStore necesita una
+ * instantanea estable: parsear aqui devolveria un objeto nuevo en cada lectura
+ * y React entraria en bucle.
+ */
+export function getStoredUserRaw(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return localStorage.getItem(USER_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function getUser(): UserDto | null {
+  const raw = getStoredUserRaw();
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as UserDto;
+  } catch {
+    return null;
+  }
+}
+
+export function setUser(user: UserDto | null) {
+  if (typeof window === "undefined") return;
+  try {
+    if (user) localStorage.setItem(USER_KEY, JSON.stringify(user));
+    else localStorage.removeItem(USER_KEY);
+  } catch {
+    // Modo privado: la sesion dura lo que dure la pestana.
   }
 }
 
@@ -124,17 +165,19 @@ export async function getTransactions(): Promise<TransactionDto[]> {
 export async function login(
   email: string,
   password: string,
-): Promise<{ token: string }> {
+): Promise<LoginResponseDto> {
   if (isUsingMockData()) {
     await delay(500);
-    return { token: "mock-token" };
+    return {
+      token: "mock-token",
+      expiration: new Date(Date.now() + 3600_000).toISOString(),
+      user: { id: 0, name: "Usuario demo", email },
+    };
   }
 
-  // Real endpoint: POST /api/Users/login
-  const response = await request<{ token: string }>("/api/Users/login", {
+  // Real endpoint: POST /api/Users/login -> { token, expiration, user }
+  return request<LoginResponseDto>("/api/Users/login", {
     method: "POST",
     body: JSON.stringify({ email, password }),
   });
-
-  return response;
 }

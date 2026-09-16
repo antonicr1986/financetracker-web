@@ -38,3 +38,16 @@ export interface PagedResult<T> {
   pageSize: number;
   totalPages: number;
 }
+
+export interface UserDto {
+  id: number;
+  name: string;
+  email: string;
+}
+
+/** Respuesta de POST /api/Users/login. */
+export interface LoginResponseDto {
+  token: string;
+  expiration: string;
+  user: UserDto;
+}

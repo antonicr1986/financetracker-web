@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { getToken, setToken } from "@/lib/api/client";
+import { getToken, setToken, setUser } from "@/lib/api/client";
 
 const STORAGE_KEY = "financetracker.api.url";
 
@@ -77,6 +77,7 @@ export default function SettingsPage() {
 
     function handleLogout() {
         setToken(null);
+        setUser(null);
         router.push("/login");
     }
 

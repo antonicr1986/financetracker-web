@@ -1,19 +1,40 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { getToken, setToken, setUser } from "@/lib/api/client";
+import { useState, useSyncExternalStore } from "react";
+import {
+    getApiUrl,
+    getDefaultApiUrl,
+    getToken,
+    setToken,
+    setUser,
+} from "@/lib/api/client";
 
 const STORAGE_KEY = "financetracker.api.url";
 
+const noop = () => () => {};
+
+/** Lo que hay guardado en el navegador, sin contar la URL por defecto. */
+function getSavedApiUrl(): string {
+    if (typeof window === "undefined") return "";
+    try {
+        return localStorage.getItem(STORAGE_KEY) || "";
+    } catch {
+        return "";
+    }
+}
+
 export default function SettingsPage() {
     const router = useRouter();
-    const [apiUrl, setApiUrl] = useState(() => {
-        if (typeof window !== "undefined") {
-            return localStorage.getItem(STORAGE_KEY) || "";
-        }
-        return "";
-    });
+    // El valor guardado se lee con useSyncExternalStore para que servidor y
+    // cliente pinten lo mismo en el primer render. El borrador es lo que el
+    // usuario esta escribiendo; mientras sea null manda lo guardado.
+    const savedApiUrl = useSyncExternalStore(noop, getSavedApiUrl, () => "");
+    const [draftApiUrl, setDraftApiUrl] = useState<string | null>(null);
+    const apiUrl = draftApiUrl ?? savedApiUrl;
+    const setApiUrl = setDraftApiUrl;
+    const defaultApiUrl = getDefaultApiUrl();
+    const effectiveApiUrl = getApiUrl();
     const [isSaved, setIsSaved] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isTesting, setIsTesting] = useState(false);
@@ -33,6 +54,7 @@ export default function SettingsPage() {
         try {
             if (typeof window !== "undefined") {
                 localStorage.setItem(STORAGE_KEY, apiUrl);
+                setDraftApiUrl(null);
                 setIsSaved(true);
                 setTimeout(() => setIsSaved(false), 3000);
             }
@@ -117,7 +139,9 @@ export default function SettingsPage() {
                                     className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-slate-500 dark:focus:ring-slate-800"
                                 />
                                 <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
-                                    Ejemplo: http://localhost:5000 o https://api.tu-dominio.com
+                                    {defaultApiUrl
+                                        ? `Dejalo vacio para usar la de por defecto: ${defaultApiUrl}`
+                                        : "Ejemplo: http://localhost:5279 o https://api.tu-dominio.com"}
                                 </p>
                             </div>
 
@@ -175,8 +199,13 @@ export default function SettingsPage() {
                                     API URL
                                 </p>
                                 <p className="mt-1 font-mono text-sm text-slate-900 dark:text-slate-100">
-                                    {apiUrl || "No configurada"}
+                                    {effectiveApiUrl || "No configurada"}
                                 </p>
+                                {!savedApiUrl && effectiveApiUrl && (
+                                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                                        Valor por defecto de la compilacion.
+                                    </p>
+                                )}
                             </div>
 
                             <div>

@@ -11,16 +11,35 @@ const TOKEN_KEY = "financetracker.token"; // gitleaks:allow
 const USER_KEY = "financetracker.user";
 
 /**
- * Get the configured API URL from localStorage.
- * If not configured, returns null and the app uses mock data.
+ * URL por defecto de la API, fijada en tiempo de compilacion con la variable
+ * NEXT_PUBLIC_API_URL. Es lo que hace que el sitio desplegado funcione de
+ * serie, sin que cada visitante tenga que escribir la URL en Configuracion.
  */
-function getApiUrl(): string | null {
-  if (typeof window === "undefined") return null;
+const DEFAULT_API_URL = normaliseApiUrl(process.env.NEXT_PUBLIC_API_URL);
+
+/** Quita espacios y la barra final, que si no generaria rutas con doble barra. */
+function normaliseApiUrl(value: string | null | undefined): string | null {
+  const trimmed = value?.trim().replace(/\/+$/, "");
+  return trimmed ? trimmed : null;
+}
+
+/**
+ * URL de la API en uso: manda lo que el usuario haya guardado en Configuracion
+ * y, si no hay nada, la de por defecto. Si tampoco la hay, devuelve null y la
+ * aplicacion tira de datos de ejemplo.
+ */
+export function getApiUrl(): string | null {
+  if (typeof window === "undefined") return DEFAULT_API_URL;
   try {
-    return localStorage.getItem(API_URL_STORAGE_KEY) || null;
+    return normaliseApiUrl(localStorage.getItem(API_URL_STORAGE_KEY)) ?? DEFAULT_API_URL;
   } catch {
-    return null;
+    return DEFAULT_API_URL;
   }
+}
+
+/** La de por defecto, para poder mostrarla en Configuracion. */
+export function getDefaultApiUrl(): string | null {
+  return DEFAULT_API_URL;
 }
 
 export function getToken(): string | null {

@@ -82,7 +82,7 @@ export default function SettingsPage() {
     }
 
     return (
-        <main className="min-h-screen bg-slate-50 dark:bg-slate-950">
+        <main>
             <div className="mx-auto max-w-2xl px-4 py-8">
                 <header className="mb-8">
                     <h1 className="text-3xl font-semibold text-slate-900 dark:text-slate-100">

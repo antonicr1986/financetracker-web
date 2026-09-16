@@ -15,12 +15,18 @@ a personal finance REST API built with .NET 8.
 
 ## 🚧 Status
 
-Work in progress. The dashboard is visually complete but still runs on typed
-sample data — it does not consume the real API yet.
+Running end to end against the real API: JWT sign-in, data from Azure SQL and a
+dashboard computed from it.
 
-That is deliberate. The types in `src/lib/types.ts` mirror the API DTOs, so
-wiring up the backend once it is deployed means replacing the data layer
-without touching a single component.
+There is a **public demo account**. The button on the sign-in screen uses it and
+loads data seeded by the backend, so the app can be explored without
+registering.
+
+When no API is configured the interface falls back to sample data rather than
+breaking, which keeps it runnable without a backend.
+
+Still missing: the app only reads. Creating, editing and deleting transactions
+cannot be done from the interface yet.
 
 ## 🖼️ Preview
 
@@ -61,9 +67,20 @@ Other commands:
 
     src/
       app/          Routes and pages (App Router)
+      components/   Header, chart and reusable pieces
       lib/
+        api/        HTTP client, session and demo mode
         types.ts    Types mirroring the API DTOs
-        mock.ts     Sample data used until the backend is live
+        mock.ts     Sample data used when no API is configured
+
+## 🔌 Connecting to the API
+
+The API URL is resolved in this order: whatever the user saved on the Settings
+screen and, failing that, the `NEXT_PUBLIC_API_URL` environment variable. If
+neither is set, sample data is used.
+
+`NEXT_PUBLIC_*` is inlined at build time rather than read at startup: changing
+it on Vercel requires a redeploy to take effect.
 
 ## 🔄 Automation
 
@@ -85,9 +102,9 @@ code that was already live.
 
 ## 🗺️ Roadmap
 
-- JWT authentication against the API
-- Real data instead of sample data
 - Full CRUD for transactions, categories and budgets
+- Read-only demo account
+- Transaction filters and search
 
 ## ✍️ Author
 

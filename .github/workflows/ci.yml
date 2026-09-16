@@ -58,12 +58,16 @@ jobs:
     name: deploy
     # Solo despues de que los dos jobs anteriores esten en verde, y solo en main.
     needs: [secrets, build]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # workflow_dispatch incluido a proposito: permite republicar a mano cuando
+    # cambia una variable de entorno de Vercel, que no genera ningun commit.
+    if: >-
+      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+      || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
 
     environment:
       name: production
-      url: https://financetracker-web.vercel.app
+      url: https://financetracker-web-tau.vercel.app
 
     env:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}

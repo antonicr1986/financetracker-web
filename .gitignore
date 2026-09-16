@@ -43,3 +43,5 @@ next-env.d.ts
 .vercel
 .env*
 .vs/
+
+.github/copilot-instructions.md

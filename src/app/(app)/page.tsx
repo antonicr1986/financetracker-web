@@ -312,8 +312,8 @@ export default function Home() {
 function SkeletonCard() {
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-      <div className="h-4 w-20 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
-      <div className="mt-3 h-7 w-28 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
+      <div className="h-4 w-20 animate-pulse rounded bg-slate-300 dark:bg-slate-800" />
+      <div className="mt-3 h-7 w-28 animate-pulse rounded bg-slate-300 dark:bg-slate-800" />
     </div>
   );
 }
@@ -322,14 +322,14 @@ function DashboardSkeleton() {
   return (
     <main>
       <div className="mx-auto max-w-5xl px-4 py-8">
-        <div className="h-8 w-40 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
-        <div className="mt-2 h-4 w-32 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
+        <div className="h-8 w-40 animate-pulse rounded bg-slate-300 dark:bg-slate-800" />
+        <div className="mt-2 h-4 w-32 animate-pulse rounded bg-slate-300 dark:bg-slate-800" />
 
         <div className="mt-6 flex flex-wrap gap-2">
           {Array.from({ length: 6 }).map((_, index) => (
             <div
               key={index}
-              className="h-9 w-14 animate-pulse rounded-lg bg-slate-200 dark:bg-slate-800"
+              className="h-9 w-14 animate-pulse rounded-lg bg-slate-300 dark:bg-slate-800"
             />
           ))}
         </div>

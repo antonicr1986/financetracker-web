@@ -8,6 +8,14 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Reserva el hueco de la barra de desplazamiento vertical siempre, haya o no
+   contenido que desborde. Sin esto, pasar de una pagina que scrollea (Resumen)
+   a una que no (Configuracion) ensancha la ventana unos 15px y desplaza todo lo
+   centrado, incluida la cabecera. */
+html {
+  scrollbar-gutter: stable;
+}
+
 /* Colores del grafico: validados por separado para cada fondo. */
 :root {
   --chart-income: #1baf7a;

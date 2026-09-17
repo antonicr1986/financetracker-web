@@ -42,6 +42,29 @@ export function getDefaultApiUrl(): string | null {
   return DEFAULT_API_URL;
 }
 
+/**
+ * Evento propio que se emite al guardar o borrar la sesion. Sin el, quien lee
+ * el token con useSyncExternalStore no se entera del cambio hasta el siguiente
+ * repintado, y la cabecera se quedaba mostrando una sesion ya cerrada.
+ */
+const SESSION_EVENT = "financetracker:session";
+
+function notifySessionChange() {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new Event(SESSION_EVENT));
+}
+
+/** Suscripcion para useSyncExternalStore. "storage" cubre las otras pestanas. */
+export function subscribeToSession(onChange: () => void): () => void {
+  if (typeof window === "undefined") return () => {};
+  window.addEventListener(SESSION_EVENT, onChange);
+  window.addEventListener("storage", onChange);
+  return () => {
+    window.removeEventListener(SESSION_EVENT, onChange);
+    window.removeEventListener("storage", onChange);
+  };
+}
+
 export function getToken(): string | null {
   if (typeof window === "undefined") return null;
   try {
@@ -81,6 +104,7 @@ export function setUser(user: UserDto | null) {
   try {
     if (user) localStorage.setItem(USER_KEY, JSON.stringify(user));
     else localStorage.removeItem(USER_KEY);
+    notifySessionChange();
   } catch {
     // Modo privado: la sesion dura lo que dure la pestana.
   }
@@ -91,6 +115,7 @@ export function setToken(token: string | null) {
   try {
     if (token) localStorage.setItem(TOKEN_KEY, token);
     else localStorage.removeItem(TOKEN_KEY);
+    notifySessionChange();
   } catch {
     // Private mode: the session lasts as long as the tab.
   }

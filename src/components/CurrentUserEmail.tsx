@@ -1,10 +1,8 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { getStoredUserRaw } from "@/lib/api/client";
+import { getStoredUserRaw, subscribeToSession } from "@/lib/api/client";
 import type { UserDto } from "@/lib/types";
-
-const noop = () => () => {};
 
 /**
  * Correo de la sesion actual. En el servidor no hay localStorage, asi que la
@@ -12,7 +10,7 @@ const noop = () => () => {};
  * cliente coincide con el HTML y no se rompe la hidratacion.
  */
 export default function CurrentUserEmail() {
-  const raw = useSyncExternalStore(noop, getStoredUserRaw, () => null);
+  const raw = useSyncExternalStore(subscribeToSession, getStoredUserRaw, () => null);
 
   if (!raw) return null;
 

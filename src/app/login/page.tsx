@@ -3,7 +3,9 @@
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { login, setToken, setUser, isUsingMockData } from "@/lib/api/client";
+import { getAndClearReturnUrl } from "@/lib/useSessionGuard";
 import { useMockMode } from "@/lib/useMockMode";
+import SessionExpiredBanner from "@/components/SessionExpiredBanner";
 import Link from "next/link";
 
 // Cuenta publica de solo lectura sembrada por el backend (DemoDataSeeder),
@@ -34,7 +36,11 @@ export default function LoginPage() {
       const response = await login(emailToUse, passwordToUse);
       setToken(response.token);
       setUser(response.user ?? null);
-      router.push("/");
+      
+      // Si hay una URL guardada (porque la sesión expiró), volver allí
+      // Si no, ir a la página principal
+      const returnUrl = getAndClearReturnUrl();
+      router.push(returnUrl || "/");
     } catch (cause: unknown) {
       if (cause instanceof Error) {
         setError(cause.message);
@@ -74,9 +80,11 @@ export default function LoginPage() {
           </p>
         </div>
 
+        <SessionExpiredBanner />
+
         <form
           onSubmit={handleSubmit}
-          className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+          className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900"
           noValidate
         >
           <label

@@ -3,7 +3,6 @@
 import { useRouter } from "next/navigation";
 import { useState, useSyncExternalStore } from "react";
 import {
-    getApiUrl,
     getDefaultApiUrl,
     getToken,
     setToken,
@@ -34,7 +33,10 @@ export default function SettingsPage() {
     const apiUrl = draftApiUrl ?? savedApiUrl;
     const setApiUrl = setDraftApiUrl;
     const defaultApiUrl = getDefaultApiUrl();
-    const effectiveApiUrl = getApiUrl();
+    // Derivada de savedApiUrl y no de getApiUrl(): esta ultima lee localStorage
+    // directamente, que en el servidor no existe, y el texto renderizado no
+    // coincidia con el del cliente.
+    const effectiveApiUrl = savedApiUrl.trim().replace(/\/+$/, "") || defaultApiUrl;
     const [isSaved, setIsSaved] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isTesting, setIsTesting] = useState(false);

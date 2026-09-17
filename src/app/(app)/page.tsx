@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import MonthlyChart from "@/components/MonthlyChart";
+import CollapsibleSection from "@/components/CollapsibleSection";
 import { getTransactions } from "@/lib/api/client";
 import { useMockMode } from "@/lib/useMockMode";
 import {
@@ -49,7 +50,7 @@ function SummaryCard({
   }[tone];
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <div>
       <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
         {label}
       </p>
@@ -149,6 +150,11 @@ export default function Home() {
     ? Math.max(...breakdown.map((item) => item.amount))
     : 0;
 
+  // Categoria de mayor gasto, para el resumen que se ve con el bloque plegado.
+  const topCategory = breakdown.length
+    ? breakdown.reduce((mayor, item) => (item.amount > mayor.amount ? item : mayor))
+    : null;
+
   if (isLoading) {
     return <DashboardSkeleton />;
   }
@@ -229,30 +235,44 @@ export default function Home() {
           })}
         </div>
 
-        <section className="grid gap-4 sm:grid-cols-3">
-          <SummaryCard label="Ingresos" value={summary.totalIncome} tone="income" />
-          <SummaryCard label="Gastos" value={summary.totalExpense} tone="expense" />
-          <SummaryCard label="Balance" value={summary.balance} tone="balance" />
-        </section>
+        <CollapsibleSection
+          title="Totales del mes"
+          collapsedSummary={`Balance ${currency.format(summary.balance)}`}
+        >
+          <div className="grid gap-4 sm:grid-cols-3">
+            <SummaryCard label="Ingresos" value={summary.totalIncome} tone="income" />
+            <SummaryCard label="Gastos" value={summary.totalExpense} tone="expense" />
+            <SummaryCard label="Balance" value={summary.balance} tone="balance" />
+          </div>
+        </CollapsibleSection>
 
-        <section className="mt-8 rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <h2 className="mb-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
-            Evolucion mensual
-          </h2>
+        <CollapsibleSection
+          title="Evolucion mensual"
+          collapsedSummary={
+            months.length
+              ? `${monthShortLabel(months[0])} – ${monthShortLabel(months[months.length - 1])}`
+              : undefined
+          }
+          className="mt-8"
+        >
           <MonthlyChart data={monthly} active={monthShortLabel(selected)} />
-        </section>
+        </CollapsibleSection>
 
-        <section className="mt-8 rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-            Gastos por categoria
-          </h2>
-
+        <CollapsibleSection
+          title="Gastos por categoria"
+          collapsedSummary={
+            topCategory
+              ? `Mayor: ${topCategory.categoryName} (${currency.format(topCategory.amount)})`
+              : "Sin gastos"
+          }
+          className="mt-8"
+        >
           {breakdown.length === 0 ? (
-            <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
+            <p className="text-sm text-slate-500 dark:text-slate-400">
               No hay gastos registrados este mes.
             </p>
           ) : (
-            <ul className="mt-4 space-y-3">
+            <ul className="space-y-3">
               {breakdown.map((item) => (
                 <li key={item.categoryName}>
                   <div className="flex items-baseline justify-between gap-4">
@@ -273,19 +293,23 @@ export default function Home() {
               ))}
             </ul>
           )}
-        </section>
+        </CollapsibleSection>
 
-        <section className="mt-8 rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-          <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-            Movimientos de {monthShortLabel(selected).toLowerCase()}
-          </h2>
-
+        <CollapsibleSection
+          title={`Movimientos de ${monthShortLabel(selected).toLowerCase()}`}
+          collapsedSummary={
+            transactions.length === 1
+              ? "1 movimiento"
+              : `${transactions.length} movimientos`
+          }
+          className="mt-8"
+        >
           {transactions.length === 0 ? (
-            <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
+            <p className="text-sm text-slate-500 dark:text-slate-400">
               No hay movimientos este mes.
             </p>
           ) : (
-            <div className="mt-2 overflow-x-auto">
+            <div className="overflow-x-auto">
               <table className="w-full min-w-[32rem]">
                 <thead>
                   <tr className="text-left text-xs font-medium tracking-wide text-slate-400 uppercase dark:text-slate-500">
@@ -303,7 +327,7 @@ export default function Home() {
               </table>
             </div>
           )}
-        </section>
+        </CollapsibleSection>
       </div>
     </main>
   );

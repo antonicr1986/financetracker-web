@@ -9,19 +9,20 @@ import { useSearchParams } from "next/navigation";
  */
 export default function SessionExpiredBanner() {
   const searchParams = useSearchParams();
-  const [show, setShow] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+
+  // Solo se ejecuta en el cliente (no en SSR)
+  const shouldShow = searchParams.get("reason") === "expired";
 
   useEffect(() => {
-    // Si el parámetro "reason=expired" está en la URL, mostrar el banner
-    if (searchParams.get("reason") === "expired") {
-      setShow(true);
-      // Ocultarlo automáticamente después de 6 segundos
-      const timer = setTimeout(() => setShow(false), 6000);
-      return () => clearTimeout(timer);
-    }
-  }, [searchParams]);
+    if (!shouldShow) return;
 
-  if (!show) return null;
+    // Ocultarlo automáticamente después de 6 segundos
+    const timer = setTimeout(() => setIsVisible(false), 6000);
+    return () => clearTimeout(timer);
+  }, [shouldShow]);
+
+  if (!shouldShow || !isVisible) return null;
 
   return (
     <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-200">

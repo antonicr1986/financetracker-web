@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { login, setToken, setUser, isUsingMockData } from "@/lib/api/client";
@@ -80,7 +81,9 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <SessionExpiredBanner />
+        <Suspense fallback={null}>
+          <SessionExpiredBanner />
+        </Suspense>
 
         <form
           onSubmit={handleSubmit}

@@ -1,6 +1,7 @@
 "use client";
 
 import TopBar from "@/components/TopBar";
+import SiteFooter from "@/components/SiteFooter";
 import { useSessionGuard } from "@/lib/useSessionGuard";
 
 export default function AppLayout({
@@ -13,9 +14,11 @@ export default function AppLayout({
   const canRender = useSessionGuard();
 
   return (
-    <div className="min-h-screen bg-slate-200 dark:bg-slate-950">
+    <div className="flex min-h-screen flex-col bg-slate-200 dark:bg-slate-950">
       <TopBar />
-      {canRender ? children : null}
+      {/* flex-1 empuja el pie al fondo aunque la pagina sea corta. */}
+      <div className="flex-1">{canRender ? children : null}</div>
+      <SiteFooter />
     </div>
   );
 }

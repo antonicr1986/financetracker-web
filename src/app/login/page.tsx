@@ -2,7 +2,7 @@
 
 import { Suspense } from "react";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import {
   login,
   setToken,
@@ -28,6 +28,16 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSlow, setIsSlow] = useState(false);
+
+  // La base de datos de Azure se pausa tras un rato sin uso y despertarla lleva
+  // su tiempo. El backend reintenta solo, pero desde fuera solo se ve un boton
+  // quieto: si la espera se alarga, explicamos por que.
+  useEffect(() => {
+    if (!isSubmitting) return;
+    const timer = setTimeout(() => setIsSlow(true), 4000);
+    return () => clearTimeout(timer);
+  }, [isSubmitting]);
 
   async function signIn(emailToUse: string, passwordToUse: string) {
     setError(null);
@@ -37,6 +47,7 @@ export default function LoginPage() {
       return;
     }
 
+    setIsSlow(false);
     setIsSubmitting(true);
 
     try {
@@ -161,6 +172,16 @@ export default function LoginPage() {
           >
             {isSubmitting ? "Entrando..." : "Entrar"}
           </button>
+
+          {isSubmitting && isSlow && (
+            <p
+              role="status"
+              className="mt-3 rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+            >
+              El servidor estaba en reposo y está despertando. La primera
+              entrada del día puede tardar unos segundos.
+            </p>
+          )}
 
           <div className="mt-4 flex items-center gap-3">
             <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />

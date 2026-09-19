@@ -176,6 +176,52 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Saca del cuerpo de la respuesta el motivo real del error.
+ *
+ * La API contesta de tres formas segun el caso: una cadena suelta
+ * (`BadRequest("...")`), un ProblemDetails, o un ValidationProblemDetails con
+ * los errores por campo. Antes se descartaba todo y se mostraba un texto
+ * generico, asi que "ya existe un usuario con ese correo" llegaba al usuario
+ * como "Datos invalidos".
+ */
+async function readServerMessage(response: Response): Promise<string | null> {
+  let raw: string;
+  try {
+    raw = await response.text();
+  } catch {
+    return null;
+  }
+
+  if (!raw.trim()) return null;
+
+  try {
+    const parsed: unknown = JSON.parse(raw);
+
+    if (typeof parsed === "string") return parsed;
+
+    if (parsed && typeof parsed === "object") {
+      const body = parsed as {
+        detail?: string;
+        title?: string;
+        errors?: Record<string, string[]>;
+      };
+
+      if (body.errors) {
+        const first = Object.values(body.errors).flat().find(Boolean);
+        if (first) return first;
+      }
+
+      return body.detail ?? body.title ?? null;
+    }
+
+    return null;
+  } catch {
+    // No era JSON: puede ser texto plano. Se descarta si parece una pagina.
+    return raw.length <= 200 ? raw : null;
+  }
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const baseUrl = getApiUrl();
 
@@ -204,14 +250,21 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       setUser(null);
     }
 
+    // El 401 conserva su texto: el mensaje del servidor ("Invalid email or
+    // password") esta en ingles y no distingue caducidad de credenciales.
+    const serverMessage =
+      response.status === 401 ? null : await readServerMessage(response);
+
     const message =
-      response.status === 401
+      serverMessage ??
+      (response.status === 401
         ? "Tu sesión ha caducado. Por favor, inicia sesión de nuevo."
         : response.status === 400
           ? "Datos inválidos."
           : response.status === 500
             ? "Error del servidor. Intenta más tarde."
-            : "No se ha podido contactar con el servidor.";
+            : "No se ha podido contactar con el servidor.");
+
     throw new ApiError(message, response.status);
   }
 
@@ -248,6 +301,23 @@ export async function getTransactions(): Promise<TransactionDto[]> {
   } while (pageNumber <= totalPages);
 
   return all;
+}
+
+export async function register(
+  name: string,
+  email: string,
+  password: string,
+): Promise<UserDto> {
+  if (isUsingMockData()) {
+    await delay(500);
+    return { id: 0, name, email };
+  }
+
+  // Devuelve el usuario creado, no un token: hay que iniciar sesion despues.
+  return request<UserDto>("/api/Users/register", {
+    method: "POST",
+    body: JSON.stringify({ name, email, password }),
+  });
 }
 
 export async function login(

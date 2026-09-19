@@ -1,6 +1,6 @@
 import AuthShell from "@/components/AuthShell";
 
-export default function LoginLayout({
+export default function RegisterLayout({
   children,
 }: {
   children: React.ReactNode;

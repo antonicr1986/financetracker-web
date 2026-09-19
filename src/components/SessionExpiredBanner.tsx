@@ -1,34 +1,32 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSyncExternalStore } from "react";
+import { subscribeToSession, wasSessionExpired } from "@/lib/api/client";
 
 /**
- * Banner que muestra cuando la sesión expiró y el usuario fue redirigido a login.
- * Se muestra de forma suave (sin error rojo), como una información útil.
+ * Aviso en la pantalla de acceso cuando la sesion se ha invalidado desde el
+ * servidor. Es informativo, no un error: aqui el usuario si puede hacer algo.
+ *
+ * El indicador se lee con useSyncExternalStore y no en el cuerpo del componente
+ * porque en el servidor no hay localStorage: leerlo directamente da un texto en
+ * el HTML y otro en el navegador, que es como se rompe la hidratacion. Y no se
+ * borra al pintar, sino al iniciar sesion, para no provocar un efecto con
+ * setState de por medio.
  */
 export default function SessionExpiredBanner() {
-  const searchParams = useSearchParams();
-  const [isVisible, setIsVisible] = useState(true);
+  const expired = useSyncExternalStore(
+    subscribeToSession,
+    wasSessionExpired,
+    () => false,
+  );
 
-  // Solo se ejecuta en el cliente (no en SSR)
-  const shouldShow = searchParams.get("reason") === "expired";
-
-  useEffect(() => {
-    if (!shouldShow) return;
-
-    // Ocultarlo automáticamente después de 6 segundos
-    const timer = setTimeout(() => setIsVisible(false), 6000);
-    return () => clearTimeout(timer);
-  }, [shouldShow]);
-
-  if (!shouldShow || !isVisible) return null;
+  if (!expired) return null;
 
   return (
-    <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-200">
-      <p className="font-medium">Tu sesión expiró</p>
+    <div className="mt-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
+      <p className="font-medium">Tu sesión ha caducado</p>
       <p className="mt-1">
-        Por favor, inicia sesión de nuevo. Después volverás a donde estabas.
+        Vuelve a entrar y te llevamos de nuevo a donde estabas.
       </p>
     </div>
   );

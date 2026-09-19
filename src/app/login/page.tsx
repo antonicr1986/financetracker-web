@@ -3,7 +3,13 @@
 import { Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { login, setToken, setUser, isUsingMockData } from "@/lib/api/client";
+import {
+  login,
+  setToken,
+  setUser,
+  clearSessionExpired,
+  isUsingMockData,
+} from "@/lib/api/client";
 import { getAndClearReturnUrl } from "@/lib/useSessionGuard";
 import { useMockMode } from "@/lib/useMockMode";
 import SessionExpiredBanner from "@/components/SessionExpiredBanner";
@@ -37,6 +43,8 @@ export default function LoginPage() {
       const response = await login(emailToUse, passwordToUse);
       setToken(response.token);
       setUser(response.user ?? null);
+      // El aviso de sesion caducada ya ha cumplido: se borra al entrar.
+      clearSessionExpired();
       
       // Si hay una URL guardada (porque la sesión expiró), volver allí
       // Si no, ir a la página principal

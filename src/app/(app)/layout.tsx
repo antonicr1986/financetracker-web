@@ -8,14 +8,14 @@ export default function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Vigila si la sesión sigue válida
-  // Si expira, guarda la ubicación actual y redirige a login
-  useSessionGuard();
+  // Sin sesion, el guard redirige al acceso y aqui no se pinta el contenido:
+  // asi el panel no llega a montarse ni a lanzar una peticion condenada al 401.
+  const canRender = useSessionGuard();
 
   return (
     <div className="min-h-screen bg-slate-200 dark:bg-slate-950">
       <TopBar />
-      {children}
+      {canRender ? children : null}
     </div>
   );
 }

@@ -9,6 +9,7 @@ import { mockTransactions } from "@/lib/mock";
 const API_URL_STORAGE_KEY = "financetracker.api.url";
 const TOKEN_KEY = "financetracker.token"; // gitleaks:allow
 const USER_KEY = "financetracker.user";
+const EXPIRED_KEY = "financetracker.session-expired";
 
 /**
  * URL por defecto de la API, fijada en tiempo de compilacion con la variable
@@ -63,6 +64,40 @@ export function subscribeToSession(onChange: () => void): () => void {
     window.removeEventListener(SESSION_EVENT, onChange);
     window.removeEventListener("storage", onChange);
   };
+}
+
+/**
+ * Marca que la sesion se ha invalidado desde el servidor (un 401 con token en
+ * mano). Lo lee la pantalla de acceso para explicar por que esta ahi. Es un
+ * indicador aparte del token justamente porque el token ya no existe cuando hay
+ * que dar la explicacion.
+ */
+function markSessionExpired() {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(EXPIRED_KEY, "1");
+  } catch {
+    // Modo privado: nos quedamos sin el aviso, no es grave.
+  }
+}
+
+export function wasSessionExpired(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return localStorage.getItem(EXPIRED_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+export function clearSessionExpired() {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem(EXPIRED_KEY);
+  } catch {
+    // Nada que limpiar.
+  }
+  notifySessionChange();
 }
 
 export function getToken(): string | null {
@@ -160,6 +195,15 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   });
 
   if (!response.ok) {
+    // Un 401 no es solo un mensaje: el token que llevabamos ya no vale, asi que
+    // se cierra la sesion aqui mismo. El guard de (app) vera que no hay token y
+    // llevara al acceso, donde el aviso si puede hacerse algo al respecto.
+    if (response.status === 401) {
+      if (getToken() !== null) markSessionExpired();
+      setToken(null);
+      setUser(null);
+    }
+
     const message =
       response.status === 401
         ? "Tu sesión ha caducado. Por favor, inicia sesión de nuevo."

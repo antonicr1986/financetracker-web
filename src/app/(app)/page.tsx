@@ -15,7 +15,7 @@ import {
   summaryOf,
   transactionsOfMonth,
 } from "@/lib/derive";
-import type { TransactionDto } from "@/lib/types";
+import type { TransactionDto, TransactionType } from "@/lib/types";
 
 const currency = new Intl.NumberFormat("es-ES", {
   style: "currency",
@@ -143,6 +143,57 @@ export default function Home() {
     () => (selected ? transactionsOfMonth(allTransactions, selected) : []),
     [allTransactions, selected],
   );
+  // Filtros de la tabla de movimientos. Se aplican en cliente sobre los datos
+  // ya cargados: la respuesta es inmediata y no rompe el resto del panel, que
+  // deriva los meses, la grafica y los totales de esa misma carga completa.
+  const [typeFilter, setTypeFilter] = useState<"all" | TransactionType>("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [search, setSearch] = useState("");
+
+  const categoryNames = useMemo(() => {
+    const names = new Set(
+      transactions.map((item) => item.categoryName ?? "Sin categoria"),
+    );
+    return [...names].sort((a, b) => a.localeCompare(b, "es"));
+  }, [transactions]);
+
+  // Si la categoria elegida no existe en el mes que se esta viendo, se ignora.
+  // Comprobarlo aqui evita tener que reiniciar el filtro desde un efecto al
+  // cambiar de mes, que es justo lo que dispara el aviso del linter.
+  const activeCategory = categoryNames.includes(categoryFilter)
+    ? categoryFilter
+    : "all";
+
+  const hasFilters =
+    typeFilter !== "all" || activeCategory !== "all" || search.trim() !== "";
+
+  const visibleTransactions = useMemo(() => {
+    const needle = search.trim().toLowerCase();
+
+    return transactions.filter((item) => {
+      if (typeFilter !== "all" && item.type !== typeFilter) return false;
+
+      if (
+        activeCategory !== "all" &&
+        (item.categoryName ?? "Sin categoria") !== activeCategory
+      ) {
+        return false;
+      }
+
+      if (needle && !item.description.toLowerCase().includes(needle)) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [transactions, typeFilter, activeCategory, search]);
+
+  function clearFilters() {
+    setTypeFilter("all");
+    setCategoryFilter("all");
+    setSearch("");
+  }
+
   const summary = useMemo(() => summaryOf(transactions), [transactions]);
   const breakdown = useMemo(() => breakdownOf(transactions), [transactions]);
 
@@ -298,9 +349,9 @@ export default function Home() {
         <CollapsibleSection
           title={`Movimientos de ${monthShortLabel(selected).toLowerCase()}`}
           collapsedSummary={
-            transactions.length === 1
+            visibleTransactions.length === 1
               ? "1 movimiento"
-              : `${transactions.length} movimientos`
+              : `${visibleTransactions.length} movimientos`
           }
           className="mt-8"
         >
@@ -309,6 +360,76 @@ export default function Home() {
               No hay movimientos este mes.
             </p>
           ) : (
+            <>
+              <div className="mb-4 flex flex-wrap items-center gap-2">
+                <label className="sr-only" htmlFor="filtro-busqueda">
+                  Buscar por concepto
+                </label>
+                <input
+                  id="filtro-busqueda"
+                  type="search"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Buscar concepto..."
+                  className="min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:focus:ring-slate-800"
+                />
+
+                <label className="sr-only" htmlFor="filtro-tipo">
+                  Tipo de movimiento
+                </label>
+                <select
+                  id="filtro-tipo"
+                  value={typeFilter}
+                  onChange={(event) =>
+                    setTypeFilter(event.target.value as "all" | TransactionType)
+                  }
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:focus:ring-slate-800"
+                >
+                  <option value="all">Todos</option>
+                  <option value="Income">Ingresos</option>
+                  <option value="Expense">Gastos</option>
+                </select>
+
+                <label className="sr-only" htmlFor="filtro-categoria">
+                  Categoria
+                </label>
+                <select
+                  id="filtro-categoria"
+                  value={activeCategory}
+                  onChange={(event) => setCategoryFilter(event.target.value)}
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:focus:ring-slate-800"
+                >
+                  <option value="all">Todas las categorias</option>
+                  {categoryNames.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+
+                {hasFilters && (
+                  <button
+                    type="button"
+                    onClick={clearFilters}
+                    className="rounded-lg px-3 py-1.5 text-sm font-medium text-slate-500 underline-offset-2 transition hover:text-slate-900 hover:underline dark:text-slate-400 dark:hover:text-slate-100"
+                  >
+                    Limpiar
+                  </button>
+                )}
+              </div>
+
+              {hasFilters && (
+                <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+                  Mostrando {visibleTransactions.length} de {transactions.length}{" "}
+                  movimientos del mes.
+                </p>
+              )}
+
+              {visibleTransactions.length === 0 ? (
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  Ningun movimiento coincide con los filtros.
+                </p>
+              ) : (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[32rem]">
                 <thead>
@@ -320,12 +441,14 @@ export default function Home() {
                   </tr>
                 </thead>
                 <tbody>
-                  {transactions.map((transaction) => (
+                  {visibleTransactions.map((transaction) => (
                     <TransactionRow key={transaction.id} transaction={transaction} />
                   ))}
                 </tbody>
               </table>
             </div>
+              )}
+            </>
           )}
         </CollapsibleSection>
       </div>

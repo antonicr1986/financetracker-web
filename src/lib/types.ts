@@ -51,3 +51,18 @@ export interface LoginResponseDto {
   expiration: string;
   user: UserDto;
 }
+
+export interface CategoryDto {
+  id: number;
+  name: string;
+  type: TransactionType;
+}
+
+/** Cuerpo de POST /api/Transactions. */
+export interface CreateTransactionInput {
+  description: string;
+  amount: number;
+  date: string;
+  type: TransactionType;
+  categoryId: number;
+}

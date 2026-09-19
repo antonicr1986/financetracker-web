@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import MonthlyChart from "@/components/MonthlyChart";
 import CollapsibleSection from "@/components/CollapsibleSection";
+import NewTransactionDialog from "@/components/NewTransactionDialog";
 import { getTransactions } from "@/lib/api/client";
 import { useMockMode } from "@/lib/useMockMode";
 import {
@@ -97,37 +98,46 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
 
+  // `focusMonth` permite saltar al mes del movimiento recien creado, que puede
+  // no ser el ultimo con datos si se registra algo de un mes anterior.
+  const load = useCallback(
+    (focusMonth?: string) =>
+      getTransactions()
+        .then((data) => {
+          setAllTransactions(data);
+          const months = availableMonths(data);
+          const target =
+            focusMonth && months.includes(focusMonth)
+              ? focusMonth
+              : months[months.length - 1] ?? null;
+          setSelected(target);
+          setError(null);
+        })
+        .catch((cause: unknown) => {
+          const message =
+            cause instanceof Error
+              ? cause.message
+              : "No se han podido cargar los datos.";
+          setError(message);
+
+          // Sin API configurada no hay nada que reintentar: se lleva al usuario
+          // a la pantalla donde puede indicarla.
+          if (message.includes("API no configurada")) {
+            setTimeout(() => router.push("/settings"), 2000);
+          }
+        })
+        .finally(() => setIsLoading(false)),
+    [router],
+  );
+
   useEffect(() => {
-    let cancelled = false;
+    void load();
+  }, [load]);
 
-    getTransactions()
-      .then((data) => {
-        if (cancelled) return;
-        setAllTransactions(data);
-        const months = availableMonths(data);
-        setSelected(months[months.length - 1] ?? null);
-      })
-      .catch((cause: unknown) => {
-        if (cancelled) return;
-        const message =
-          cause instanceof Error
-            ? cause.message
-            : "No se han podido cargar los datos.";
-        setError(message);
-
-        // If API is not configured and not in mock mode, redirect to settings
-        if (message.includes("API no configurada")) {
-          setTimeout(() => router.push("/settings"), 2000);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setIsLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [router]);
+  // La fecha del alta llega como AAAA-MM-DD; el panel agrupa por AAAA-MM.
+  function handleCreated(createdOn: string) {
+    void load(createdOn.slice(0, 7));
+  }
 
   const months = useMemo(
     () => availableMonths(allTransactions),
@@ -229,9 +239,19 @@ export default function Home() {
   if (!selected) {
     return (
       <main className="mx-auto max-w-5xl px-4 py-8">
-        <div className="rounded-xl border border-slate-200 bg-white p-5 text-sm text-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200">
-          <p className="font-medium">No hay datos disponibles</p>
-          <p className="mt-1">No hay movimientos registrados aún.</p>
+        <div className="rounded-xl border border-slate-200 bg-white p-8 text-center dark:border-slate-800 dark:bg-slate-900">
+          <p className="font-medium text-slate-900 dark:text-slate-100">
+            Aún no tienes movimientos
+          </p>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            Registra el primero y aquí verás tus totales, la evolución mensual y
+            el desglose por categoría.
+          </p>
+          {!mockMode && (
+            <div className="mt-6 flex justify-center">
+              <NewTransactionDialog onCreated={handleCreated} />
+            </div>
+          )}
         </div>
       </main>
     );
@@ -256,13 +276,19 @@ export default function Home() {
           </div>
         )}
 
-        <header className="mb-6">
-          <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-            Resumen
-          </h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            {monthLongLabel(selected)}
-          </p>
+        <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
+              Resumen
+            </h1>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+              {monthLongLabel(selected)}
+            </p>
+          </div>
+
+          {/* En modo demostracion no hay API donde guardar: ofrecer el alta
+              seria prometer algo que no se puede cumplir. */}
+          {!mockMode && <NewTransactionDialog onCreated={handleCreated} />}
         </header>
 
         <div className="mb-6 flex flex-wrap gap-2">

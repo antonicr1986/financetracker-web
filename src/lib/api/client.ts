@@ -1,4 +1,6 @@
 import type {
+  CategoryDto,
+  CreateTransactionInput,
   LoginResponseDto,
   PagedResult,
   TransactionDto,
@@ -301,6 +303,30 @@ export async function getTransactions(): Promise<TransactionDto[]> {
   } while (pageNumber <= totalPages);
 
   return all;
+}
+
+export async function getCategories(): Promise<CategoryDto[]> {
+  if (isUsingMockData()) {
+    await delay(200);
+    return [];
+  }
+
+  return request<CategoryDto[]>("/api/Categories");
+}
+
+export async function createTransaction(
+  input: CreateTransactionInput,
+): Promise<TransactionDto> {
+  if (isUsingMockData()) {
+    throw new Error(
+      "No hay ninguna API configurada: en modo demostración no se pueden guardar movimientos.",
+    );
+  }
+
+  return request<TransactionDto>("/api/Transactions", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
 }
 
 export async function register(

@@ -410,7 +410,7 @@ export default function Home() {
           title={t("dashboard.monthlyTrend")}
           collapsedSummary={
             months.length
-              ? `${monthShortLabel(months[0])} – ${monthShortLabel(months[months.length - 1])}`
+              ? `${monthShortLabel(months[0], tag)} – ${monthShortLabel(months[months.length - 1], tag)}`
               : undefined
           }
           className="mt-8"
@@ -460,7 +460,7 @@ export default function Home() {
 
         <CollapsibleSection
           title={t("dashboard.movementsOf", {
-            month: monthShortLabel(selected, tag).toLowerCase(),
+            month: monthShortLabel(selected, tag),
           })}
           collapsedSummary={
             visibleTransactions.length === 1

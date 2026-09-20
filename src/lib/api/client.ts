@@ -1,4 +1,6 @@
 import type {
+  BudgetDto,
+  BudgetInput,
   CategoryDto,
   TransactionInput,
   LoginResponseDto,
@@ -401,6 +403,55 @@ export async function deleteTransaction(id: number): Promise<void> {
   }
 
   await request<void>(`/api/Transactions/${id}`, { method: "DELETE" });
+}
+
+/**
+ * GET /api/Budgets. Devuelve todos los presupuestos del usuario, de cualquier
+ * mes: el endpoint no admite filtro, asi que el panel se queda con los del mes
+ * que se esta viendo. Son pocos por naturaleza, no compensa paginarlos.
+ */
+export async function getBudgets(): Promise<BudgetDto[]> {
+  if (isUsingMockData()) {
+    await delay(200);
+    return [];
+  }
+
+  return request<BudgetDto[]>("/api/Budgets");
+}
+
+export async function createBudget(input: BudgetInput): Promise<BudgetDto> {
+  if (isUsingMockData()) {
+    throw new ApiError("api_not_configured", 0);
+  }
+
+  return request<BudgetDto>("/api/Budgets", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+/** PUT /api/Budgets/{id}. Contesta 204. */
+export async function updateBudget(
+  id: number,
+  input: BudgetInput,
+): Promise<void> {
+  if (isUsingMockData()) {
+    throw new ApiError("api_not_configured", 0);
+  }
+
+  await request<void>(`/api/Budgets/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(input),
+  });
+}
+
+/** DELETE /api/Budgets/{id}. Contesta 204. */
+export async function deleteBudget(id: number): Promise<void> {
+  if (isUsingMockData()) {
+    throw new ApiError("api_not_configured", 0);
+  }
+
+  await request<void>(`/api/Budgets/${id}`, { method: "DELETE" });
 }
 
 export async function register(

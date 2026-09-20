@@ -52,6 +52,37 @@ export interface LoginResponseDto {
   user: UserDto;
 }
 
+/**
+ * GET /api/Budgets. Lo gastado, lo que queda y el porcentaje los calcula la
+ * API cruzando el presupuesto con los movimientos del mes: no se derivan aqui.
+ *
+ * `categoryId` a null es un presupuesto para todo el tipo, no para una
+ * categoria concreta.
+ */
+export interface BudgetDto {
+  id: number;
+  name: string;
+  amount: number;
+  spentAmount: number;
+  remainingAmount: number;
+  usagePercentage: number;
+  month: number;
+  year: number;
+  type: TransactionType;
+  categoryId: number | null;
+  categoryName: string | null;
+}
+
+/** Cuerpo de POST y PUT /api/Budgets. */
+export interface BudgetInput {
+  name: string;
+  amount: number;
+  month: number;
+  year: number;
+  type: TransactionType;
+  categoryId: number | null;
+}
+
 export interface CategoryDto {
   id: number;
   name: string;

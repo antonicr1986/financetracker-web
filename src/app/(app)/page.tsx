@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import MonthlyChart from "@/components/MonthlyChart";
 import CollapsibleSection from "@/components/CollapsibleSection";
 import TransactionDialog from "@/components/TransactionDialog";
+import BudgetsSection from "@/components/BudgetsSection";
 import { ApiError, getTransactions } from "@/lib/api/client";
 import { useMockMode } from "@/lib/useMockMode";
 import { useT } from "@/lib/i18n/useT";
@@ -129,6 +130,11 @@ export default function Home() {
   const [allTransactions, setAllTransactions] = useState<TransactionDto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSlow, setIsSlow] = useState(false);
+
+  // Se incrementa cada vez que cambian los movimientos. Los presupuestos lo
+  // vigilan: lo gastado lo calcula la API cruzando ambos, asi que al guardar o
+  // borrar un movimiento el porcentaje que tienen en pantalla deja de valer.
+  const [transactionsVersion, setTransactionsVersion] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
 
@@ -185,6 +191,7 @@ export default function Home() {
   // estaba viendo si se cambio la fecha.
   function handleSaved(focusMonth: string) {
     setDialog(null);
+    setTransactionsVersion((current) => current + 1);
     void load(focusMonth);
   }
 
@@ -393,6 +400,11 @@ export default function Home() {
             <SummaryCard label={t("dashboard.balance")} value={summary.balance} tone="balance" />
           </div>
         </CollapsibleSection>
+
+        {/* En modo demostracion no hay API a la que pedir presupuestos. */}
+        {!mockMode && (
+          <BudgetsSection month={selected} refreshToken={transactionsVersion} />
+        )}
 
         <CollapsibleSection
           title={t("dashboard.monthlyTrend")}

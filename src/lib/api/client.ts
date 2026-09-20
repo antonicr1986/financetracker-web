@@ -224,10 +224,16 @@ async function readServerMessage(response: Response): Promise<string | null> {
 
     if (parsed && typeof parsed === "object") {
       const body = parsed as {
+        code?: string;
         detail?: string;
         title?: string;
         errors?: Record<string, string[]>;
       };
+
+      // "code" manda: es el identificador que la API emite a proposito para
+      // que el cliente pueda traducirlo. Lo demas es texto en ingles, util
+      // como respaldo pero no como mensaje final.
+      if (body.code) return body.code;
 
       if (body.errors) {
         const first = Object.values(body.errors).flat().find(Boolean);
@@ -272,8 +278,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       setUser(null);
     }
 
-    const serverCode =
-      response.status === 401 ? null : await readServerMessage(response);
+    // El 401 tambien se lee: la API distingue "invalid_credentials" de una
+    // sesion caducada, y sin esto el acceso mostraba "tu sesion ha caducado" a
+    // quien simplemente se habia equivocado de contrasena.
+    const serverCode = await readServerMessage(response);
 
     const code: ApiErrorCode =
       response.status === 401

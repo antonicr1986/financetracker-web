@@ -368,6 +368,35 @@ export async function createCategory(
   });
 }
 
+/** PUT /api/Categories/{id}. Contesta 204. */
+export async function updateCategory(
+  id: number,
+  name: string,
+  type: TransactionType,
+): Promise<void> {
+  if (isUsingMockData()) {
+    throw new ApiError("api_not_configured", 0);
+  }
+
+  await request<void>(`/api/Categories/${id}`, {
+    method: "PUT",
+    body: JSON.stringify({ name, type }),
+  });
+}
+
+/**
+ * DELETE /api/Categories/{id}. Contesta 204, o 400 con el codigo
+ * category_has_transactions si la categoria tiene movimientos: la API no deja
+ * dejarlos huerfanos.
+ */
+export async function deleteCategory(id: number): Promise<void> {
+  if (isUsingMockData()) {
+    throw new ApiError("api_not_configured", 0);
+  }
+
+  await request<void>(`/api/Categories/${id}`, { method: "DELETE" });
+}
+
 export async function createTransaction(
   input: TransactionInput,
 ): Promise<TransactionDto> {

@@ -6,6 +6,7 @@ import MonthlyChart from "@/components/MonthlyChart";
 import CollapsibleSection from "@/components/CollapsibleSection";
 import TransactionDialog from "@/components/TransactionDialog";
 import BudgetsSection from "@/components/BudgetsSection";
+import CategoriesSection from "@/components/CategoriesSection";
 import { ApiError, getTransactions } from "@/lib/api/client";
 import { useMockMode } from "@/lib/useMockMode";
 import { useT } from "@/lib/i18n/useT";
@@ -578,6 +579,13 @@ export default function Home() {
             </>
           )}
         </CollapsibleSection>
+
+        {/* Va la ultima y plegada: es mantenimiento, no lo que se viene a ver.
+            Al renombrar o borrar cambia el nombre que llevan los movimientos ya
+            cargados, de ahi la recarga. */}
+        {!mockMode && (
+          <CategoriesSection onChanged={() => void load(selected)} />
+        )}
       </div>
       {transactionDialog}
     </main>

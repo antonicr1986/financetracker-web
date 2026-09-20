@@ -11,21 +11,26 @@ import type { ReactNode } from "react";
  * `collapsedSummary` es un resumen de una linea que solo se ve con el bloque
  * plegado: se oculta con `group-open:hidden`, que lee el atributo `open` del
  * <details>, sin JavaScript de por medio.
+ *
+ * `defaultOpen` solo fija el estado inicial. Despues manda el usuario: React no
+ * vuelve a tocar el atributo mientras la prop no cambie.
  */
 export default function CollapsibleSection({
   title,
   children,
   collapsedSummary,
   className = "",
+  defaultOpen = true,
 }: {
   title: string;
   children: ReactNode;
   collapsedSummary?: ReactNode;
   className?: string;
+  defaultOpen?: boolean;
 }) {
   return (
     <details
-      open
+      open={defaultOpen}
       className={`group rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 ${className}`.trim()}
     >
       <summary className="flex cursor-pointer list-none items-center justify-between gap-4 [&::-webkit-details-marker]:hidden">

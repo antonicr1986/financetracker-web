@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useHasSession } from "@/lib/useSession";
+import { useT } from "@/lib/i18n/useT";
 
 const linkClasses =
   "rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800";
@@ -21,16 +22,17 @@ const linkClasses =
 export default function HeaderNavLink() {
   const pathname = usePathname();
   const hasSession = useHasSession();
+  const t = useT();
 
   if (pathname !== "/settings") return null;
 
   return hasSession ? (
     <Link href="/" className={linkClasses}>
-      Resumen
+      {t("header.summary")}
     </Link>
   ) : (
     <Link href="/login" className={linkClasses}>
-      Iniciar sesión
+      {t("header.signIn")}
     </Link>
   );
 }

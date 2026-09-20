@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import { getApiUrl, getDefaultApiUrl } from "@/lib/api/client";
+import { useT } from "@/lib/i18n/useT";
 
 const noop = () => () => {};
 
@@ -25,11 +26,12 @@ const linkClasses =
  */
 export default function SiteFooter() {
   const apiUrl = useSyncExternalStore(noop, getApiUrl, getDefaultApiUrl);
+  const t = useT();
 
   return (
     <footer className="mt-12 border-t border-slate-300 py-6 dark:border-slate-800">
       <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-center gap-x-4 gap-y-2 px-4 text-xs text-slate-500 dark:text-slate-400">
-        <span>Next.js y .NET 8</span>
+        <span>{t("footer.stack")}</span>
 
         {apiUrl && (
           <>
@@ -40,7 +42,7 @@ export default function SiteFooter() {
               rel="noreferrer"
               className={linkClasses}
             >
-              Documentación de la API
+              {t("footer.apiDocs")}
             </a>
           </>
         )}
@@ -52,7 +54,7 @@ export default function SiteFooter() {
           rel="noreferrer"
           className={linkClasses}
         >
-          Código del frontend
+          {t("footer.frontendCode")}
         </a>
 
         <span aria-hidden="true">·</span>
@@ -62,7 +64,7 @@ export default function SiteFooter() {
           rel="noreferrer"
           className={linkClasses}
         >
-          Código de la API
+          {t("footer.apiCode")}
         </a>
       </div>
     </footer>

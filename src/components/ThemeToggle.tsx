@@ -1,6 +1,10 @@
 "use client";
 
+import { useT } from "@/lib/i18n/useT";
+
 export default function ThemeToggle() {
+  const t = useT();
+
   function toggle() {
     const isDark = document.documentElement.classList.toggle("dark");
     try {
@@ -14,7 +18,7 @@ export default function ThemeToggle() {
     <button
       type="button"
       onClick={toggle}
-      aria-label="Cambiar entre tema claro y oscuro"
+      aria-label={t("theme.toggle")}
       className="rounded-lg border border-slate-300 p-1.5 text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
     >
       {/* Luna en tema claro, sol en tema oscuro. Lo decide CSS, no JavaScript,

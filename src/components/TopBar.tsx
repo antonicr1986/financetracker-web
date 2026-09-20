@@ -7,6 +7,8 @@ import CurrentUserEmail from "@/components/CurrentUserEmail";
 import HeaderNavLink from "@/components/HeaderNavLink";
 import { setToken, setUser } from "@/lib/api/client";
 import { useHasSession } from "@/lib/useSession";
+import LocaleToggle from "@/components/LocaleToggle";
+import { useT } from "@/lib/i18n/useT";
 
 const actionClasses =
   "rounded-lg border px-3 py-1.5 text-sm font-medium transition";
@@ -21,6 +23,7 @@ const actionClasses =
  */
 export default function TopBar() {
   const hasSession = useHasSession();
+  const t = useT();
   const pathname = usePathname();
   const router = useRouter();
   const isLoginScreen = pathname === "/login";
@@ -50,6 +53,7 @@ export default function TopBar() {
 
         <div className="flex items-center gap-3">
           <CurrentUserEmail />
+          <LocaleToggle />
           <ThemeToggle />
           <HeaderNavLink />
           {canNavigate ? (
@@ -58,13 +62,13 @@ export default function TopBar() {
               onClick={handleLogout}
               className={`${actionClasses} cursor-pointer border-slate-300 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800`}
             >
-              Salir
+              {t("header.signOut")}
             </button>
           ) : (
             <button
               type="button"
               disabled
-              title="No hay ninguna sesión abierta"
+              title={t("header.noSession")}
               className={`${actionClasses} cursor-not-allowed border-slate-200 text-slate-400 dark:border-slate-800 dark:text-slate-600`}
             >
               Salir

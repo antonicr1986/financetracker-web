@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { login, register, setToken, setUser } from "@/lib/api/client";
+import { useT } from "@/lib/i18n/useT";
 
 const inputClasses =
   "mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-600 dark:focus:border-slate-500 dark:focus:ring-slate-800 dark:disabled:bg-slate-900";
@@ -13,6 +14,7 @@ const labelClasses =
 
 export default function RegisterPage() {
   const router = useRouter();
+  const t = useT();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -29,17 +31,17 @@ export default function RegisterPage() {
     // correo valido y contrasena de al menos 6 caracteres. Se comprueban aqui
     // para no gastar una ida y vuelta en un error evidente.
     if (!name.trim() || !email.trim() || !password) {
-      setError("Rellena todos los campos.");
+      setError(t("errors.fillAll"));
       return;
     }
 
     if (password.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres.");
+      setError(t("errors.passwordTooShort"));
       return;
     }
 
     if (password !== confirmation) {
-      setError("Las dos contraseñas no coinciden.");
+      setError(t("errors.passwordsDontMatch"));
       return;
     }
 
@@ -59,7 +61,7 @@ export default function RegisterPage() {
       setError(
         cause instanceof Error
           ? cause.message
-          : "No se ha podido crear la cuenta.",
+          : t("errors.createAccountFailed"),
       );
       setIsSubmitting(false);
     }
@@ -69,10 +71,10 @@ export default function RegisterPage() {
     <main className="w-full max-w-sm">
       <div className="mb-6 text-center">
         <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
-          Crear cuenta
+          {t("register.title")}
         </h1>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          Empieza a llevar tus finanzas
+          {t("register.subtitle")}
         </p>
       </div>
 
@@ -82,7 +84,7 @@ export default function RegisterPage() {
         noValidate
       >
         <label htmlFor="name" className={labelClasses}>
-          Nombre
+          {t("register.name")}
         </label>
         <input
           id="name"
@@ -93,11 +95,11 @@ export default function RegisterPage() {
           onChange={(event) => setName(event.target.value)}
           disabled={isSubmitting}
           className={inputClasses}
-          placeholder="Tu nombre"
+          placeholder={t("register.namePlaceholder")}
         />
 
         <label htmlFor="email" className={`mt-4 ${labelClasses}`}>
-          Correo electrónico
+          {t("login.email")}
         </label>
         <input
           id="email"
@@ -108,11 +110,11 @@ export default function RegisterPage() {
           onChange={(event) => setEmail(event.target.value)}
           disabled={isSubmitting}
           className={inputClasses}
-          placeholder="tu@correo.com"
+          placeholder={t("login.emailPlaceholder")}
         />
 
         <label htmlFor="password" className={`mt-4 ${labelClasses}`}>
-          Contraseña
+          {t("login.password")}
         </label>
         <input
           id="password"
@@ -122,11 +124,11 @@ export default function RegisterPage() {
           onChange={(event) => setPassword(event.target.value)}
           disabled={isSubmitting}
           className={inputClasses}
-          placeholder="Mínimo 6 caracteres"
+          placeholder={t("register.passwordPlaceholder")}
         />
 
         <label htmlFor="confirmation" className={`mt-4 ${labelClasses}`}>
-          Repite la contraseña
+          {t("register.confirm")}
         </label>
         <input
           id="confirmation"
@@ -153,17 +155,17 @@ export default function RegisterPage() {
           disabled={isSubmitting}
           className="mt-6 w-full rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
         >
-          {isSubmitting ? "Creando cuenta..." : "Crear cuenta"}
+          {isSubmitting ? t("register.submitting") : t("register.title")}
         </button>
       </form>
 
       <p className="mt-4 text-center text-sm text-slate-500 dark:text-slate-400">
-        ¿Ya tienes cuenta?{" "}
+        {t("register.haveAccount")}{" "}
         <Link
           href="/login"
           className="font-medium text-slate-700 underline-offset-2 hover:underline dark:text-slate-200"
         >
-          Inicia sesión
+          {t("login.submit")}
         </Link>
       </p>
     </main>

@@ -12,6 +12,7 @@ import {
 } from "@/lib/api/client";
 import { getAndClearReturnUrl } from "@/lib/useSessionGuard";
 import { useMockMode } from "@/lib/useMockMode";
+import { useT } from "@/lib/i18n/useT";
 import SessionExpiredBanner from "@/components/SessionExpiredBanner";
 import Link from "next/link";
 
@@ -23,6 +24,7 @@ const DEMO_PASSWORD = "Demo1234!"; // gitleaks:allow
 export default function LoginPage() {
   const router = useRouter();
   const mockMode = useMockMode();
+  const t = useT();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -43,7 +45,7 @@ export default function LoginPage() {
     setError(null);
 
     if (!emailToUse || !passwordToUse) {
-      setError("Introduce tu correo y tu contraseña.");
+      setError(t("errors.fillCredentials"));
       return;
     }
 
@@ -67,8 +69,8 @@ export default function LoginPage() {
       } else {
         setError(
           isUsingMockData()
-            ? "No se ha podido iniciar sesión."
-            : "No se ha podido contactar con el servidor."
+            ? t("errors.signInFailed")
+            : t("errors.serverUnreachable")
         );
       }
     } finally {
@@ -96,7 +98,7 @@ export default function LoginPage() {
             FinanceTracker
           </h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Accede para ver tus finanzas
+            {t("login.subtitle")}
           </p>
         </div>
 
@@ -113,7 +115,7 @@ export default function LoginPage() {
             htmlFor="email"
             className="block text-sm font-medium text-slate-700 dark:text-slate-300"
           >
-            Correo electrónico
+            {t("login.email")}
           </label>
           <input
             id="email"
@@ -123,14 +125,14 @@ export default function LoginPage() {
             onChange={(event) => setEmail(event.target.value)}
             disabled={isSubmitting}
             className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-600 dark:focus:border-slate-500 dark:focus:ring-slate-800 dark:disabled:bg-slate-900 dark:disabled:text-slate-500"
-            placeholder="tu@correo.com"
+            placeholder={t("login.emailPlaceholder")}
           />
 
           <label
             htmlFor="password"
             className="mt-4 block text-sm font-medium text-slate-700 dark:text-slate-300"
           >
-            Contraseña
+            {t("login.password")}
           </label>
           <input
             id="password"
@@ -154,12 +156,12 @@ export default function LoginPage() {
 
           {mockMode && (
             <p className="mt-4 rounded-lg bg-blue-50 px-3 py-2 text-sm text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-              <strong>Modo demostración:</strong> Usa cualquier correo y contraseña.{" "}
+              <strong>{t("login.demoBanner")}</strong> {t("login.demoBannerBody")}{" "}
               <Link
                 href="/settings"
                 className="underline hover:no-underline dark:text-blue-200"
               >
-                Configura la API aquí
+                {t("login.configureApi")}
               </Link>
               .
             </p>
@@ -170,7 +172,7 @@ export default function LoginPage() {
             disabled={isSubmitting}
             className="mt-6 w-full rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white dark:disabled:bg-slate-700 dark:disabled:text-slate-400"
           >
-            {isSubmitting ? "Entrando..." : "Entrar"}
+            {isSubmitting ? t("login.submitting") : t("login.submit")}
           </button>
 
           {isSubmitting && isSlow && (
@@ -178,14 +180,13 @@ export default function LoginPage() {
               role="status"
               className="mt-3 rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-600 dark:bg-slate-800 dark:text-slate-300"
             >
-              El servidor estaba en reposo y está despertando. La primera
-              entrada del día puede tardar unos segundos.
+              {t("login.wakingUp")}
             </p>
           )}
 
           <div className="mt-4 flex items-center gap-3">
             <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
-            <span className="text-xs text-slate-400 dark:text-slate-500">o</span>
+            <span className="text-xs text-slate-400 dark:text-slate-500">{t("login.or")}</span>
             <span className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
           </div>
 
@@ -195,7 +196,7 @@ export default function LoginPage() {
             disabled={isSubmitting}
             className="mt-4 w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-400 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 dark:disabled:text-slate-500"
           >
-            Entrar con la cuenta de demostración
+            {t("login.demo")}
           </button>
 
           <p className="mt-2 text-center text-xs text-slate-400 dark:text-slate-500">
@@ -204,19 +205,19 @@ export default function LoginPage() {
         </form>
 
         <p className="mt-4 text-center text-sm text-slate-500 dark:text-slate-400">
-          ¿No tienes cuenta?{" "}
+          {t("login.noAccount")}{" "}
           <Link
             href="/register"
             className="font-medium text-slate-700 underline-offset-2 hover:underline dark:text-slate-200"
           >
-            Crear una
+            {t("login.createOne")}
           </Link>
         </p>
 
         <p className="mt-4 text-center text-xs text-slate-400 dark:text-slate-500">
           {mockMode
-            ? "Modo demostración sin conexión a API"
-            : "Conectado a la API"}
+            ? t("login.offline")
+            : t("login.connected")}
         </p>
       </div>
     </main>

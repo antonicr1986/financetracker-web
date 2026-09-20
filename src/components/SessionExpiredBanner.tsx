@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import { subscribeToSession, wasSessionExpired } from "@/lib/api/client";
+import { useT } from "@/lib/i18n/useT";
 
 /**
  * Aviso en la pantalla de acceso cuando la sesion se ha invalidado desde el
@@ -14,6 +15,7 @@ import { subscribeToSession, wasSessionExpired } from "@/lib/api/client";
  * setState de por medio.
  */
 export default function SessionExpiredBanner() {
+  const t = useT();
   const expired = useSyncExternalStore(
     subscribeToSession,
     wasSessionExpired,
@@ -24,9 +26,9 @@ export default function SessionExpiredBanner() {
 
   return (
     <div className="mt-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
-      <p className="font-medium">Tu sesión ha caducado</p>
+      <p className="font-medium">{t("session.expiredTitle")}</p>
       <p className="mt-1">
-        Vuelve a entrar y te llevamos de nuevo a donde estabas.
+        {t("session.expiredBody")}
       </p>
     </div>
   );

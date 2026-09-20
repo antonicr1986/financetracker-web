@@ -5,48 +5,51 @@ import type {
   TransactionDto,
 } from "./types";
 
-const MONTH_LABELS = [
-  "Ene",
-  "Feb",
-  "Mar",
-  "Abr",
-  "May",
-  "Jun",
-  "Jul",
-  "Ago",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dic",
-];
-
-const MONTH_NAMES = [
-  "enero",
-  "febrero",
-  "marzo",
-  "abril",
-  "mayo",
-  "junio",
-  "julio",
-  "agosto",
-  "septiembre",
-  "octubre",
-  "noviembre",
-  "diciembre",
-];
-
 /** "2026-09-04" -> "2026-09". Sin crear Date: evita sorpresas de zona horaria. */
 export function monthKey(isoDate: string) {
   return isoDate.slice(0, 7);
 }
 
-export function monthShortLabel(key: string) {
-  return MONTH_LABELS[Number(key.slice(5, 7)) - 1];
+/**
+ * Las etiquetas de mes salen de Intl y no de una lista escrita a mano, para que
+ * sigan al idioma elegido. Los formateadores se cachean porque crearlos es caro
+ * y aqui se llaman una vez por mes y por render.
+ */
+const formatterCache = new Map<string, Intl.DateTimeFormat>();
+
+function monthFormatter(tag: string, options: Intl.DateTimeFormatOptions) {
+  const cacheKey = `${tag}|${JSON.stringify(options)}`;
+  let formatter = formatterCache.get(cacheKey);
+
+  if (!formatter) {
+    formatter = new Intl.DateTimeFormat(tag, options);
+    formatterCache.set(cacheKey, formatter);
+  }
+
+  return formatter;
 }
 
-export function monthLongLabel(key: string) {
-  const month = MONTH_NAMES[Number(key.slice(5, 7)) - 1];
-  return `${month} de ${key.slice(0, 4)}`;
+/** Mediodia del dia 1: aleja el valor de cualquier salto de zona horaria. */
+function monthDate(key: string) {
+  return new Date(Number(key.slice(0, 4)), Number(key.slice(5, 7)) - 1, 1, 12);
+}
+
+export function monthShortLabel(key: string, tag = "es-ES") {
+  const label = monthFormatter(tag, { month: "short" })
+    .format(monthDate(key))
+    .replace(".", "");
+
+  // Intl devuelve el mes en minuscula en espanol; aqui se usa como etiqueta.
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+export function monthLongLabel(key: string, tag = "es-ES") {
+  const label = monthFormatter(tag, {
+    month: "long",
+    year: "numeric",
+  }).format(monthDate(key));
+
+  return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
 /** Meses presentes en los datos, del mas antiguo al mas reciente. */
@@ -97,11 +100,12 @@ export function breakdownOf(
 
 export function monthlySeries(
   transactions: TransactionDto[],
+  tag = "es-ES",
 ): MonthlyPoint[] {
   return availableMonths(transactions).map((key) => {
     const summary = summaryOf(transactionsOfMonth(transactions, key));
     return {
-      month: monthShortLabel(key),
+      month: monthShortLabel(key, tag),
       income: summary.totalIncome,
       expense: summary.totalExpense,
     };

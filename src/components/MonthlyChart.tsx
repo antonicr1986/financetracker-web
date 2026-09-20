@@ -2,20 +2,11 @@
 
 import { useState } from "react";
 import type { MonthlyPoint } from "@/lib/types";
+import { useFormatters } from "@/lib/i18n/format";
+import { useT } from "@/lib/i18n/useT";
 
 const INCOME = "var(--chart-income)";
 const EXPENSE = "var(--chart-expense)";
-
-const currencyShort = new Intl.NumberFormat("es-ES", {
-  style: "currency",
-  currency: "EUR",
-  maximumFractionDigits: 0,
-});
-
-const currencyExact = new Intl.NumberFormat("es-ES", {
-  style: "currency",
-  currency: "EUR",
-});
 
 function niceCeil(value: number) {
   const magnitude = Math.pow(10, Math.floor(Math.log10(value)));
@@ -23,6 +14,8 @@ function niceCeil(value: number) {
 }
 
 function Legend() {
+  const t = useT();
+
   return (
     <div className="mb-4 flex items-center gap-4">
       <span className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300">
@@ -30,14 +23,14 @@ function Legend() {
           className="h-2.5 w-2.5 rounded-sm"
           style={{ backgroundColor: INCOME }}
         />
-        Ingresos
+        {t("dashboard.income")}
       </span>
       <span className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300">
         <span
           className="h-2.5 w-2.5 rounded-sm"
           style={{ backgroundColor: EXPENSE }}
         />
-        Gastos
+        {t("dashboard.expenses")}
       </span>
     </div>
   );
@@ -51,6 +44,8 @@ export default function MonthlyChart({
   active?: string;
 }) {
   const [hovered, setHovered] = useState<number | null>(null);
+  const t = useT();
+  const { currency: currencyExact, currencyShort } = useFormatters();
 
   const max = niceCeil(
     Math.max(...data.flatMap((point) => [point.income, point.expense])),
@@ -138,10 +133,10 @@ export default function MonthlyChart({
         <div className="pointer-events-none absolute top-0 right-0 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs shadow-sm dark:border-slate-700 dark:bg-slate-800">
           <p className="font-medium text-slate-900 dark:text-slate-100">{data[hovered].month}</p>
           <p className="mt-1 text-slate-600 dark:text-slate-300">
-            Ingresos: {currencyExact.format(data[hovered].income)}
+            {t("dashboard.income")}: {currencyExact.format(data[hovered].income)}
           </p>
           <p className="text-slate-600 dark:text-slate-300">
-            Gastos: {currencyExact.format(data[hovered].expense)}
+            {t("dashboard.expenses")}: {currencyExact.format(data[hovered].expense)}
           </p>
         </div>
       )}
@@ -155,8 +150,8 @@ export default function MonthlyChart({
             <thead>
               <tr className="text-left text-xs text-slate-400 dark:text-slate-500">
                 <th className="py-1 font-medium">Mes</th>
-                <th className="py-1 text-right font-medium">Ingresos</th>
-                <th className="py-1 text-right font-medium">Gastos</th>
+                <th className="py-1 text-right font-medium">{t("dashboard.income")}</th>
+                <th className="py-1 text-right font-medium">{t("dashboard.expenses")}</th>
               </tr>
             </thead>
             <tbody>

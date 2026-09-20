@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { createTransaction, getCategories } from "@/lib/api/client";
 import type { CategoryDto, TransactionType } from "@/lib/types";
+import { useT } from "@/lib/i18n/useT";
 
 const inputClasses =
   "mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-slate-500 dark:focus:ring-slate-800";
@@ -33,6 +34,7 @@ export default function NewTransactionDialog({
   onCreated: (createdOn: string) => void;
 }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const t = useT();
 
   const [categories, setCategories] = useState<CategoryDto[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
@@ -66,7 +68,7 @@ export default function NewTransactionDialog({
       setError(
         cause instanceof Error
           ? cause.message
-          : "No se han podido cargar las categorías.",
+          : t("errors.categoriesFailed"),
       );
     } finally {
       setIsLoadingCategories(false);
@@ -85,17 +87,17 @@ export default function NewTransactionDialog({
     const parsedAmount = Number(amount.replace(",", "."));
 
     if (!description.trim()) {
-      setError("Escribe un concepto.");
+      setError(t("errors.writeConcept"));
       return;
     }
 
     if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
-      setError("El importe debe ser mayor que cero.");
+      setError(t("errors.amountPositive"));
       return;
     }
 
     if (!categoryId) {
-      setError("Elige una categoría.");
+      setError(t("errors.chooseCategory"));
       return;
     }
 
@@ -116,7 +118,7 @@ export default function NewTransactionDialog({
       setError(
         cause instanceof Error
           ? cause.message
-          : "No se ha podido guardar el movimiento.",
+          : t("errors.saveFailed"),
       );
     } finally {
       setIsSaving(false);
@@ -130,18 +132,18 @@ export default function NewTransactionDialog({
         onClick={open}
         className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
       >
-        Nuevo movimiento
+        {t("dashboard.newTransaction")}
       </button>
 
       <dialog
         ref={dialogRef}
         className="w-full max-w-sm rounded-xl bg-white p-6 text-slate-900 shadow-lg backdrop:bg-slate-900/50 dark:bg-slate-900 dark:text-slate-100"
       >
-        <h2 className="text-lg font-semibold">Nuevo movimiento</h2>
+        <h2 className="text-lg font-semibold">{t("dialog.title")}</h2>
 
         <form onSubmit={handleSubmit} className="mt-4" noValidate>
           <label htmlFor="mov-tipo" className={labelClasses}>
-            Tipo
+            {t("dialog.type")}
           </label>
           <select
             id="mov-tipo"
@@ -150,12 +152,12 @@ export default function NewTransactionDialog({
             disabled={isSaving}
             className={inputClasses}
           >
-            <option value="Expense">Gasto</option>
-            <option value="Income">Ingreso</option>
+            <option value="Expense">{t("dialog.expense")}</option>
+            <option value="Income">{t("dialog.income")}</option>
           </select>
 
           <label htmlFor="mov-concepto" className={`mt-4 ${labelClasses}`}>
-            Concepto
+            {t("dialog.concept")}
           </label>
           <input
             id="mov-concepto"
@@ -165,11 +167,11 @@ export default function NewTransactionDialog({
             onChange={(event) => setDescription(event.target.value)}
             disabled={isSaving}
             className={inputClasses}
-            placeholder="Compra del mes"
+            placeholder={t("dialog.conceptPlaceholder")}
           />
 
           <label htmlFor="mov-importe" className={`mt-4 ${labelClasses}`}>
-            Importe
+            {t("dialog.amount")}
           </label>
           <input
             id="mov-importe"
@@ -184,7 +186,7 @@ export default function NewTransactionDialog({
           />
 
           <label htmlFor="mov-fecha" className={`mt-4 ${labelClasses}`}>
-            Fecha
+            {t("dialog.date")}
           </label>
           <input
             id="mov-fecha"
@@ -196,7 +198,7 @@ export default function NewTransactionDialog({
           />
 
           <label htmlFor="mov-categoria" className={`mt-4 ${labelClasses}`}>
-            Categoría
+            {t("dialog.category")}
           </label>
           <select
             id="mov-categoria"
@@ -206,7 +208,7 @@ export default function NewTransactionDialog({
             className={inputClasses}
           >
             <option value="">
-              {isLoadingCategories ? "Cargando..." : "Elige una categoría"}
+              {isLoadingCategories ? t("dialog.loading") : t("dialog.chooseCategory")}
             </option>
             {available.map((category) => (
               <option key={category.id} value={category.id}>
@@ -217,7 +219,7 @@ export default function NewTransactionDialog({
 
           {!isLoadingCategories && available.length === 0 && (
             <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-              No tienes ninguna categoría de este tipo.
+              {t("dialog.noCategoriesOfType")}
             </p>
           )}
 
@@ -237,14 +239,14 @@ export default function NewTransactionDialog({
               disabled={isSaving}
               className="flex-1 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
             >
-              Cancelar
+              {t("dialog.cancel")}
             </button>
             <button
               type="submit"
               disabled={isSaving}
               className="flex-1 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
             >
-              {isSaving ? "Guardando..." : "Guardar"}
+              {isSaving ? t("dialog.saving") : t("dialog.save")}
             </button>
           </div>
         </form>

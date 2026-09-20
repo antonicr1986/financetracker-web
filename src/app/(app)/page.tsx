@@ -7,6 +7,8 @@ import CollapsibleSection from "@/components/CollapsibleSection";
 import NewTransactionDialog from "@/components/NewTransactionDialog";
 import { getTransactions } from "@/lib/api/client";
 import { useMockMode } from "@/lib/useMockMode";
+import { useT } from "@/lib/i18n/useT";
+import { useFormatters, intlTag } from "@/lib/i18n/format";
 import {
   availableMonths,
   breakdownOf,
@@ -18,20 +20,6 @@ import {
 } from "@/lib/derive";
 import type { TransactionDto, TransactionType } from "@/lib/types";
 
-const currency = new Intl.NumberFormat("es-ES", {
-  style: "currency",
-  currency: "EUR",
-});
-
-const shortDate = new Intl.DateTimeFormat("es-ES", {
-  day: "2-digit",
-  month: "short",
-});
-
-function formatDate(iso: string) {
-  return shortDate.format(new Date(iso));
-}
-
 function SummaryCard({
   label,
   value,
@@ -41,6 +29,8 @@ function SummaryCard({
   value: number;
   tone: "income" | "expense" | "balance";
 }) {
+  const { currency } = useFormatters();
+
   const toneClasses = {
     income: "text-emerald-700 dark:text-emerald-400",
     expense: "text-rose-700 dark:text-rose-400",
@@ -64,17 +54,19 @@ function SummaryCard({
 
 function TransactionRow({ transaction }: { transaction: TransactionDto }) {
   const isIncome = transaction.type === "Income";
+  const t = useT();
+  const { currency, shortDate } = useFormatters();
 
   return (
     <tr className="border-t border-slate-100 dark:border-slate-800">
       <td className="py-3 pr-4 text-sm whitespace-nowrap text-slate-500 dark:text-slate-400">
-        {formatDate(transaction.date)}
+        {shortDate.format(new Date(transaction.date))}
       </td>
       <td className="py-3 pr-4 text-sm font-medium text-slate-900 dark:text-slate-100">
         {transaction.description}
       </td>
       <td className="py-3 pr-4 text-sm text-slate-500 dark:text-slate-400">
-        {transaction.categoryName ?? "Sin categoria"}
+        {transaction.categoryName ?? t("table.noCategory")}
       </td>
       <td
         className={`py-3 text-right text-sm font-semibold tabular-nums whitespace-nowrap ${
@@ -93,6 +85,9 @@ function TransactionRow({ transaction }: { transaction: TransactionDto }) {
 export default function Home() {
   const router = useRouter();
   const mockMode = useMockMode();
+  const t = useT();
+  const { currency, locale } = useFormatters();
+  const tag = intlTag(locale);
   const [allTransactions, setAllTransactions] = useState<TransactionDto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -117,7 +112,7 @@ export default function Home() {
           const message =
             cause instanceof Error
               ? cause.message
-              : "No se han podido cargar los datos.";
+              : t("errors.loadFailed");
           setError(message);
 
           // Sin API configurada no hay nada que reintentar: se lleva al usuario
@@ -127,7 +122,7 @@ export default function Home() {
           }
         })
         .finally(() => setIsLoading(false)),
-    [router],
+    [router, t],
   );
 
   useEffect(() => {
@@ -145,8 +140,8 @@ export default function Home() {
   );
 
   const monthly = useMemo(
-    () => monthlySeries(allTransactions),
-    [allTransactions],
+    () => monthlySeries(allTransactions, tag),
+    [allTransactions, tag],
   );
 
   const transactions = useMemo(
@@ -162,10 +157,10 @@ export default function Home() {
 
   const categoryNames = useMemo(() => {
     const names = new Set(
-      transactions.map((item) => item.categoryName ?? "Sin categoria"),
+      transactions.map((item) => item.categoryName ?? t("table.noCategory")),
     );
-    return [...names].sort((a, b) => a.localeCompare(b, "es"));
-  }, [transactions]);
+    return [...names].sort((a, b) => a.localeCompare(b, locale));
+  }, [transactions, locale, t]);
 
   // Si la categoria elegida no existe en el mes que se esta viendo, se ignora.
   // Comprobarlo aqui evita tener que reiniciar el filtro desde un efecto al
@@ -185,7 +180,7 @@ export default function Home() {
 
       if (
         activeCategory !== "all" &&
-        (item.categoryName ?? "Sin categoria") !== activeCategory
+        (item.categoryName ?? t("table.noCategory")) !== activeCategory
       ) {
         return false;
       }
@@ -196,7 +191,7 @@ export default function Home() {
 
       return true;
     });
-  }, [transactions, typeFilter, activeCategory, search]);
+  }, [transactions, typeFilter, activeCategory, search, t]);
 
   function clearFilters() {
     setTypeFilter("all");
@@ -224,11 +219,11 @@ export default function Home() {
     return (
       <main className="mx-auto max-w-5xl px-4 py-8">
         <div className="rounded-xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-200">
-          <p className="font-medium">Error al cargar los datos</p>
+          <p className="font-medium">{t("dashboard.loadError")}</p>
           <p className="mt-1">{error}</p>
           {error.includes("API no configurada") && (
             <p className="mt-2 text-xs">
-              Redirigiendo a Configuración en 2 segundos...
+              {t("dashboard.redirecting")}
             </p>
           )}
         </div>
@@ -241,11 +236,10 @@ export default function Home() {
       <main className="mx-auto max-w-5xl px-4 py-8">
         <div className="rounded-xl border border-slate-200 bg-white p-8 text-center dark:border-slate-800 dark:bg-slate-900">
           <p className="font-medium text-slate-900 dark:text-slate-100">
-            Aún no tienes movimientos
+            {t("dashboard.emptyTitle")}
           </p>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Registra el primero y aquí verás tus totales, la evolución mensual y
-            el desglose por categoría.
+            {t("dashboard.emptyBody")}
           </p>
           {!mockMode && (
             <div className="mt-6 flex justify-center">
@@ -262,7 +256,7 @@ export default function Home() {
       <div className="mx-auto max-w-5xl px-4 py-8">
         {mockMode && (
           <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-200">
-            <p className="font-medium">Modo demostración</p>
+            <p className="font-medium">{t("dashboard.demoTitle")}</p>
             <p className="mt-1">
               Estás usando datos de demostración. Ve a{" "}
               <a
@@ -279,10 +273,10 @@ export default function Home() {
         <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-              Resumen
+              {t("dashboard.title")}
             </h1>
             <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-              {monthLongLabel(selected)}
+              {monthLongLabel(selected, tag)}
             </p>
           </div>
 
@@ -306,25 +300,25 @@ export default function Home() {
                     : "border-slate-300 text-slate-600 hover:bg-white dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
                 }`}
               >
-                {monthShortLabel(key)}
+                {monthShortLabel(key, tag)}
               </button>
             );
           })}
         </div>
 
         <CollapsibleSection
-          title="Totales del mes"
-          collapsedSummary={`Balance ${currency.format(summary.balance)}`}
+          title={t("dashboard.totals")}
+          collapsedSummary={t("dashboard.totalsSummary", { amount: currency.format(summary.balance) })}
         >
           <div className="grid gap-4 sm:grid-cols-3">
-            <SummaryCard label="Ingresos" value={summary.totalIncome} tone="income" />
-            <SummaryCard label="Gastos" value={summary.totalExpense} tone="expense" />
-            <SummaryCard label="Balance" value={summary.balance} tone="balance" />
+            <SummaryCard label={t("dashboard.income")} value={summary.totalIncome} tone="income" />
+            <SummaryCard label={t("dashboard.expenses")} value={summary.totalExpense} tone="expense" />
+            <SummaryCard label={t("dashboard.balance")} value={summary.balance} tone="balance" />
           </div>
         </CollapsibleSection>
 
         <CollapsibleSection
-          title="Evolucion mensual"
+          title={t("dashboard.monthlyTrend")}
           collapsedSummary={
             months.length
               ? `${monthShortLabel(months[0])} – ${monthShortLabel(months[months.length - 1])}`
@@ -332,21 +326,24 @@ export default function Home() {
           }
           className="mt-8"
         >
-          <MonthlyChart data={monthly} active={monthShortLabel(selected)} />
+          <MonthlyChart data={monthly} active={monthShortLabel(selected, tag)} />
         </CollapsibleSection>
 
         <CollapsibleSection
-          title="Gastos por categoria"
+          title={t("dashboard.byCategory")}
           collapsedSummary={
             topCategory
-              ? `Mayor: ${topCategory.categoryName} (${currency.format(topCategory.amount)})`
-              : "Sin gastos"
+              ? t("dashboard.byCategorySummary", {
+                  name: topCategory.categoryName,
+                  amount: currency.format(topCategory.amount),
+                })
+              : t("dashboard.noExpenses")
           }
           className="mt-8"
         >
           {breakdown.length === 0 ? (
             <p className="text-sm text-slate-500 dark:text-slate-400">
-              No hay gastos registrados este mes.
+              {t("dashboard.noExpensesThisMonth")}
             </p>
           ) : (
             <ul className="space-y-3">
@@ -373,35 +370,37 @@ export default function Home() {
         </CollapsibleSection>
 
         <CollapsibleSection
-          title={`Movimientos de ${monthShortLabel(selected).toLowerCase()}`}
+          title={t("dashboard.movementsOf", {
+            month: monthShortLabel(selected, tag).toLowerCase(),
+          })}
           collapsedSummary={
             visibleTransactions.length === 1
-              ? "1 movimiento"
-              : `${visibleTransactions.length} movimientos`
+              ? t("dashboard.movementCountOne")
+              : t("dashboard.movementCount", { count: visibleTransactions.length })
           }
           className="mt-8"
         >
           {transactions.length === 0 ? (
             <p className="text-sm text-slate-500 dark:text-slate-400">
-              No hay movimientos este mes.
+              {t("dashboard.noMovementsThisMonth")}
             </p>
           ) : (
             <>
               <div className="mb-4 flex flex-wrap items-center gap-2">
                 <label className="sr-only" htmlFor="filtro-busqueda">
-                  Buscar por concepto
+                  {t("filters.searchLabel")}
                 </label>
                 <input
                   id="filtro-busqueda"
                   type="search"
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Buscar concepto..."
+                  placeholder={t("filters.search")}
                   className="min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:focus:ring-slate-800"
                 />
 
                 <label className="sr-only" htmlFor="filtro-tipo">
-                  Tipo de movimiento
+                  {t("filters.typeLabel")}
                 </label>
                 <select
                   id="filtro-tipo"
@@ -411,13 +410,13 @@ export default function Home() {
                   }
                   className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:focus:ring-slate-800"
                 >
-                  <option value="all">Todos</option>
-                  <option value="Income">Ingresos</option>
-                  <option value="Expense">Gastos</option>
+                  <option value="all">{t("filters.allTypes")}</option>
+                  <option value="Income">{t("dashboard.income")}</option>
+                  <option value="Expense">{t("dashboard.expenses")}</option>
                 </select>
 
                 <label className="sr-only" htmlFor="filtro-categoria">
-                  Categoria
+                  {t("filters.categoryLabel")}
                 </label>
                 <select
                   id="filtro-categoria"
@@ -425,7 +424,7 @@ export default function Home() {
                   onChange={(event) => setCategoryFilter(event.target.value)}
                   className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:focus:ring-slate-800"
                 >
-                  <option value="all">Todas las categorias</option>
+                  <option value="all">{t("filters.allCategories")}</option>
                   {categoryNames.map((name) => (
                     <option key={name} value={name}>
                       {name}
@@ -439,31 +438,33 @@ export default function Home() {
                     onClick={clearFilters}
                     className="rounded-lg px-3 py-1.5 text-sm font-medium text-slate-500 underline-offset-2 transition hover:text-slate-900 hover:underline dark:text-slate-400 dark:hover:text-slate-100"
                   >
-                    Limpiar
+                    {t("filters.clear")}
                   </button>
                 )}
               </div>
 
               {hasFilters && (
                 <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
-                  Mostrando {visibleTransactions.length} de {transactions.length}{" "}
-                  movimientos del mes.
+                  {t("dashboard.showing", {
+                    shown: visibleTransactions.length,
+                    total: transactions.length,
+                  })}
                 </p>
               )}
 
               {visibleTransactions.length === 0 ? (
                 <p className="text-sm text-slate-500 dark:text-slate-400">
-                  Ningun movimiento coincide con los filtros.
+                  {t("dashboard.noMatches")}
                 </p>
               ) : (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[32rem]">
                 <thead>
                   <tr className="text-left text-xs font-medium tracking-wide text-slate-400 uppercase dark:text-slate-500">
-                    <th className="py-2 pr-4 font-medium">Fecha</th>
-                    <th className="py-2 pr-4 font-medium">Concepto</th>
-                    <th className="py-2 pr-4 font-medium">Categoria</th>
-                    <th className="py-2 text-right font-medium">Importe</th>
+                    <th className="py-2 pr-4 font-medium">{t("table.date")}</th>
+                    <th className="py-2 pr-4 font-medium">{t("table.concept")}</th>
+                    <th className="py-2 pr-4 font-medium">{t("table.category")}</th>
+                    <th className="py-2 text-right font-medium">{t("table.amount")}</th>
                   </tr>
                 </thead>
                 <tbody>

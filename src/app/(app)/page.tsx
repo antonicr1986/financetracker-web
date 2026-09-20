@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import MonthlyChart from "@/components/MonthlyChart";
 import CollapsibleSection from "@/components/CollapsibleSection";
-import NewTransactionDialog from "@/components/NewTransactionDialog";
+import TransactionDialog from "@/components/TransactionDialog";
 import { ApiError, getTransactions } from "@/lib/api/client";
 import { useMockMode } from "@/lib/useMockMode";
 import { useT } from "@/lib/i18n/useT";
@@ -53,7 +53,29 @@ function SummaryCard({
   );
 }
 
-function TransactionRow({ transaction }: { transaction: TransactionDto }) {
+/** Boton de alta. Aparece en la cabecera y tambien en el panel vacio. */
+function NewTransactionButton({ onClick }: { onClick: () => void }) {
+  const t = useT();
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
+    >
+      {t("dashboard.newTransaction")}
+    </button>
+  );
+}
+
+function TransactionRow({
+  transaction,
+  onEdit,
+}: {
+  transaction: TransactionDto;
+  /** null en modo demostracion: no hay API donde guardar el cambio. */
+  onEdit: (() => void) | null;
+}) {
   const isIncome = transaction.type === "Income";
   const t = useT();
   const { currency, shortDate } = useFormatters();
@@ -79,6 +101,20 @@ function TransactionRow({ transaction }: { transaction: TransactionDto }) {
         {isIncome ? "+" : "−"}
         {currency.format(transaction.amount)}
       </td>
+      {onEdit && (
+        <td className="py-3 pl-4 text-right">
+          <button
+            type="button"
+            onClick={onEdit}
+            // El texto visible es solo "Editar": repetido en cada fila, un
+            // lector de pantalla no sabria cual es cual sin el concepto.
+            aria-label={t("table.editOne", { concept: transaction.description })}
+            className="rounded-lg px-2 py-1 text-sm font-medium text-slate-500 underline-offset-2 transition hover:text-slate-900 hover:underline dark:text-slate-400 dark:hover:text-slate-100"
+          >
+            {t("table.edit")}
+          </button>
+        </td>
+      )}
     </tr>
   );
 }
@@ -94,6 +130,12 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
+
+  // Un solo dialogo para alta y edicion: null mientras esta cerrado, y con
+  // `transaction` a null cuando lo que se abre es un alta.
+  const [dialog, setDialog] = useState<{
+    transaction: TransactionDto | null;
+  } | null>(null);
 
   // `focusMonth` permite saltar al mes del movimiento recien creado, que puede
   // no ser el ultimo con datos si se registra algo de un mes anterior.
@@ -128,9 +170,12 @@ export default function Home() {
     void load();
   }, [load]);
 
-  // La fecha del alta llega como AAAA-MM-DD; el panel agrupa por AAAA-MM.
-  function handleCreated(createdOn: string) {
-    void load(createdOn.slice(0, 7));
+  // El dialogo devuelve ya el mes (AAAA-MM) que conviene mostrar despues: el
+  // del movimiento guardado, o el del borrado, que puede no ser el que se
+  // estaba viendo si se cambio la fecha.
+  function handleSaved(focusMonth: string) {
+    setDialog(null);
+    void load(focusMonth);
   }
 
   const months = useMemo(
@@ -232,6 +277,18 @@ export default function Home() {
     );
   }
 
+  // Montado solo mientras esta abierto, y con una `key` por movimiento: cada
+  // apertura es una instancia nueva, asi los campos arrancan con los valores
+  // correctos sin un efecto que los rellene.
+  const transactionDialog = dialog && (
+    <TransactionDialog
+      key={dialog.transaction ? `edit-${dialog.transaction.id}` : "new"}
+      transaction={dialog.transaction}
+      onClose={() => setDialog(null)}
+      onSaved={handleSaved}
+    />
+  );
+
   if (!selected) {
     return (
       <main className="mx-auto max-w-5xl px-4 py-8">
@@ -244,10 +301,13 @@ export default function Home() {
           </p>
           {!mockMode && (
             <div className="mt-6 flex justify-center">
-              <NewTransactionDialog onCreated={handleCreated} />
+              <NewTransactionButton
+                onClick={() => setDialog({ transaction: null })}
+              />
             </div>
           )}
         </div>
+        {transactionDialog}
       </main>
     );
   }
@@ -283,7 +343,11 @@ export default function Home() {
 
           {/* En modo demostracion no hay API donde guardar: ofrecer el alta
               seria prometer algo que no se puede cumplir. */}
-          {!mockMode && <NewTransactionDialog onCreated={handleCreated} />}
+          {!mockMode && (
+            <NewTransactionButton
+              onClick={() => setDialog({ transaction: null })}
+            />
+          )}
         </header>
 
         <div className="mb-6 flex flex-wrap gap-2">
@@ -459,18 +523,29 @@ export default function Home() {
                 </p>
               ) : (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[32rem]">
+              <table className="w-full min-w-[36rem]">
                 <thead>
                   <tr className="text-left text-xs font-medium tracking-wide text-slate-400 uppercase dark:text-slate-500">
                     <th className="py-2 pr-4 font-medium">{t("table.date")}</th>
                     <th className="py-2 pr-4 font-medium">{t("table.concept")}</th>
                     <th className="py-2 pr-4 font-medium">{t("table.category")}</th>
                     <th className="py-2 text-right font-medium">{t("table.amount")}</th>
+                    {!mockMode && (
+                      <th className="py-2 pl-4 text-right font-medium">
+                        <span className="sr-only">{t("table.actions")}</span>
+                      </th>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
                   {visibleTransactions.map((transaction) => (
-                    <TransactionRow key={transaction.id} transaction={transaction} />
+                    <TransactionRow
+                      key={transaction.id}
+                      transaction={transaction}
+                      onEdit={
+                        mockMode ? null : () => setDialog({ transaction })
+                      }
+                    />
                   ))}
                 </tbody>
               </table>
@@ -480,6 +555,7 @@ export default function Home() {
           )}
         </CollapsibleSection>
       </div>
+      {transactionDialog}
     </main>
   );
 }

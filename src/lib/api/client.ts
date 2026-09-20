@@ -1,6 +1,6 @@
 import type {
   CategoryDto,
-  CreateTransactionInput,
+  TransactionInput,
   LoginResponseDto,
   PagedResult,
   TransactionDto,
@@ -295,6 +295,13 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     throw new ApiError(code, response.status, serverCode ?? undefined);
   }
 
+  // Los 204 no traen cuerpo: PUT y DELETE contestan asi cuando todo ha ido
+  // bien. Pedirle JSON a una respuesta vacia lanza un error de sintaxis, es
+  // decir, convertiria un exito en un fallo.
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
   return (await response.json()) as T;
 }
 
@@ -340,7 +347,7 @@ export async function getCategories(): Promise<CategoryDto[]> {
 }
 
 export async function createTransaction(
-  input: CreateTransactionInput,
+  input: TransactionInput,
 ): Promise<TransactionDto> {
   if (isUsingMockData()) {
     throw new ApiError("api_not_configured", 0);
@@ -350,6 +357,30 @@ export async function createTransaction(
     method: "POST",
     body: JSON.stringify(input),
   });
+}
+
+/** PUT /api/Transactions/{id}. Contesta 204, no devuelve el movimiento. */
+export async function updateTransaction(
+  id: number,
+  input: TransactionInput,
+): Promise<void> {
+  if (isUsingMockData()) {
+    throw new ApiError("api_not_configured", 0);
+  }
+
+  await request<void>(`/api/Transactions/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(input),
+  });
+}
+
+/** DELETE /api/Transactions/{id}. Contesta 204, o 404 si ya no existe. */
+export async function deleteTransaction(id: number): Promise<void> {
+  if (isUsingMockData()) {
+    throw new ApiError("api_not_configured", 0);
+  }
+
+  await request<void>(`/api/Transactions/${id}`, { method: "DELETE" });
 }
 
 export async function register(

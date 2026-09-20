@@ -58,8 +58,13 @@ export interface CategoryDto {
   type: TransactionType;
 }
 
-/** Cuerpo de POST /api/Transactions. */
-export interface CreateTransactionInput {
+/**
+ * Cuerpo de POST y PUT /api/Transactions.
+ *
+ * Un solo tipo para alta y edicion porque la API espera exactamente los mismos
+ * campos en las dos: CreateTransactionDto y UpdateTransactionDto son identicos.
+ */
+export interface TransactionInput {
   description: string;
   amount: number;
   date: string;

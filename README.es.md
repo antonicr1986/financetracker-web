@@ -36,6 +36,9 @@ de romperse. Eso permite levantarla sin backend.
 - **Alta, edicion y borrado de movimientos** en un dialogo, con las categorias
   filtradas segun el tipo: la API rechaza un gasto con categoria de ingresos,
   asi que ni se ofrece. El borrado pide confirmacion en el propio dialogo.
+- **Presupuestos mensuales**, por categoria o para un tipo entero, con barra de
+  progreso y lo que queda. Lo gastado, el resto y el porcentaje los calcula la
+  API; no se derivan en el navegador.
 - **Filtros** por concepto, tipo y categoria, resueltos en cliente sobre los
   datos ya cargados.
 - **Espanol e ingles**, conmutables desde la cabecera. No solo los textos:
@@ -66,7 +69,7 @@ horizontales no compensa.
 
 ## ⚙️ Ejecutar en local
 
-Requiere Node 20 o superior.
+Requiere Node 22 o superior.
 
     npm install
     npm run dev
@@ -75,8 +78,10 @@ La aplicacion queda en http://localhost:3000.
 
 Otros comandos:
 
-    npm run build    # compilacion de produccion
-    npm run lint     # analisis estatico con ESLint
+    npm run build      # compilacion de produccion
+    npm run lint       # analisis estatico con ESLint
+    npm test           # pruebas unitarias y de componentes
+    npm run test:watch # las mismas, repitiendose a cada cambio
 
 ## 📁 Estructura del proyecto
 
@@ -89,6 +94,9 @@ Otros comandos:
         derive.ts   Totales, series y agrupaciones a partir de los movimientos
         types.ts    Tipos que reflejan los DTOs de la API
         mock.ts     Datos de ejemplo para cuando no hay API configurada
+      test/         Preparacion de las pruebas (jsdom, limpieza, parche de <dialog>)
+
+Las pruebas viven junto al fichero que cubren, como `*.test.ts` / `*.test.tsx`.
 
 ## 🌍 Idiomas
 
@@ -114,11 +122,31 @@ la pantalla de Configuracion y, si no hay nada, la variable de entorno
 `NEXT_PUBLIC_*` se incrusta al compilar, no se lee al arrancar: cambiarla en
 Vercel exige volver a desplegar para que surta efecto.
 
+## 🧪 Pruebas
+
+Vitest y Testing Library, con `npm test` y tambien dentro del pipeline.
+
+Son de dos tipos. `derive.test.ts` cubre las funciones puras sobre las que se
+construye el panel: totales, agrupacion por mes, desglose por categoria y que
+las etiquetas de los meses sigan al idioma elegido. `TransactionDialog.test.tsx`
+renderiza el dialogo con las llamadas a la API sustituidas y cubre lo que de
+verdad se rompio durante el desarrollo: que al editar los campos arrancan
+rellenos, que cambiar el tipo limpia la categoria elegida, que el borrado espera
+a la confirmacion, y que pulsar Enter en el campo de categoria nueva la crea en
+lugar de enviar el movimiento.
+
+Dos decisiones que conviene dejar dichas. Las comprobaciones leen los textos del
+diccionario espanol en vez de escribirlos a mano, asi que prueban comportamiento
+y sobreviven a un cambio de redaccion. Y jsdom no implementa `<dialog>` de forma
+fiable, de modo que el fichero de preparacion suple `showModal()` y `close()`:
+se parchea el entorno en lugar de deformar el componente para hacerlo testeable,
+porque los dialogos nativos son aqui una decision deliberada.
+
 ## 🔄 Automatizacion
 
-- **CI** en cada push y pull request: instala dependencias, pasa el linter y
-  compila para produccion, de modo que un error de tipos o de compilacion se
-  detecta antes de llegar a produccion.
+- **CI** en cada push y pull request: instala dependencias, pasa el linter,
+  ejecuta las pruebas y compila para produccion, de modo que un error de tipos,
+  de pruebas o de compilacion se detecta antes de llegar a produccion.
 - **Escaneo de secretos** con gitleaks sobre el historial completo.
 - **Rama `main` protegida** frente a *force push* y borrado.
 - **Despliegue desde el pipeline**: la publicacion en produccion es un job final
@@ -134,8 +162,8 @@ sobre codigo que ya estaba en produccion.
 
 ## 🗺️ Proximos pasos
 
-- Crear categorias desde el propio formulario de movimientos
-- Presupuestos
+- Gestion de categorias: renombrar y borrar, no solo crear
+- Mas pruebas sobre los filtros del panel
 
 ## ✍️ Autor
 

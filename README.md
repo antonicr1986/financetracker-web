@@ -36,6 +36,9 @@ breaking, which keeps it runnable without a backend.
 - **Creating, editing and deleting transactions** in a dialog, with categories
   filtered by type: the API rejects an expense filed under an income category,
   so it is never offered. Deleting asks for confirmation in the dialog itself.
+- **Monthly budgets**, per category or across a whole type, with a progress bar
+  and what is left. The spent amount, the remainder and the percentage are
+  computed by the API, not derived in the browser.
 - **Filters** by description, type and category, resolved on the client over the
   data already loaded.
 - **Spanish and English**, switchable from the header. Not just the wording:
@@ -65,7 +68,7 @@ pulling in a dependency for five horizontal bars is not worth the weight.
 
 ## ⚙️ Running locally
 
-Requires Node 20 or later.
+Requires Node 22 or later.
 
     npm install
     npm run dev
@@ -74,8 +77,10 @@ The app runs at http://localhost:3000.
 
 Other commands:
 
-    npm run build    # production build
-    npm run lint     # static analysis with ESLint
+    npm run build      # production build
+    npm run lint       # static analysis with ESLint
+    npm test           # unit and component tests
+    npm run test:watch # the same tests, re-run on every change
 
 ## 📁 Project structure
 
@@ -88,6 +93,9 @@ Other commands:
         derive.ts   Totals, series and groupings built from the transactions
         types.ts    Types mirroring the API DTOs
         mock.ts     Sample data used when no API is configured
+      test/         Test setup (jsdom, cleanup, <dialog> patch)
+
+Tests sit next to the file they cover, as `*.test.ts` / `*.test.tsx`.
 
 ## 🌍 Languages
 
@@ -113,11 +121,30 @@ neither is set, sample data is used.
 `NEXT_PUBLIC_*` is inlined at build time rather than read at startup: changing
 it on Vercel requires a redeploy to take effect.
 
+## 🧪 Tests
+
+Vitest and Testing Library, run with `npm test` and in the pipeline.
+
+Two kinds. `derive.test.ts` covers the pure functions the dashboard is built
+on: totals, grouping by month, the breakdown by category, and that month labels
+follow the chosen language. `TransactionDialog.test.tsx` renders the dialog with
+the API calls mocked and covers what actually broke during development: editing
+loads the fields, changing the type clears the chosen category, deleting waits
+for the confirmation, and pressing Enter in the new-category field creates the
+category instead of submitting the transaction.
+
+Two decisions worth stating. The assertions read their text from the Spanish
+dictionary rather than hardcoding it, so they test behaviour and survive a
+change of wording. And jsdom does not implement `<dialog>` reliably, so the
+setup file supplies `showModal()` and `close()` — patching the environment
+rather than reshaping the component to be testable, because native dialogs are
+a deliberate choice here.
+
 ## 🔄 Automation
 
 - **CI** on every push and pull request: installs dependencies, runs the
-  linter and builds for production, so a type or build error is caught before
-  it reaches production.
+  linter, runs the tests and builds for production, so a type, test or build
+  error is caught before it reaches production.
 - **Secret scanning** with gitleaks across the full history.
 - **Protected `main` branch** against force pushes and deletion.
 - **Deployment from the pipeline**: production deploys run as a final job that
@@ -133,8 +160,8 @@ code that was already live.
 
 ## 🗺️ Roadmap
 
-- Creating categories from the transaction form
-- Budgets
+- Managing categories: renaming and deleting, not just creating
+- More tests around the dashboard filters
 
 ## ✍️ Author
 

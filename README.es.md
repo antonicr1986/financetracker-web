@@ -3,7 +3,7 @@
 [English](README.md) · **Español**
 
 ![CI](https://img.shields.io/github/actions/workflow/status/antonicr1986/financetracker-web/ci.yml?branch=main&style=for-the-badge&label=CI%2FCD&logo=githubactions&logoColor=white)
-[![Demo](https://img.shields.io/badge/demo-online-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://financetracker-web-tau.vercel.app)
+[![Demo](https://img.shields.io/badge/demo-online-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://financetracker-web-tau.vercel.app/login)
 ![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
@@ -11,12 +11,13 @@
 Interfaz web de [FinanceTracker](https://github.com/antonicr1986/FinanceTracker),
 una API REST de finanzas personales construida con .NET 8.
 
-**[Ver la aplicacion desplegada](https://financetracker-web-tau.vercel.app)**
+**[Ver la aplicacion desplegada](https://financetracker-web-tau.vercel.app/login)** — entra con un clic
+usando la cuenta de demostracion.
 
 ## 🚧 Estado
 
-Funcionando de punta a punta contra la API real: acceso con JWT, datos desde
-Azure SQL y el panel calculado a partir de ellos.
+Funcionando de punta a punta contra la API real: registro y acceso con JWT,
+datos desde Azure SQL y el panel calculado a partir de ellos.
 
 Hay una **cuenta de demostracion publica**. El boton de la pantalla de acceso
 entra con ella y carga datos sembrados por el backend, asi que se puede ver la
@@ -25,8 +26,22 @@ aplicacion sin registrarse.
 Si no hay ninguna API configurada, la interfaz cae en datos de ejemplo en lugar
 de romperse. Eso permite levantarla sin backend.
 
-Pendiente: la aplicacion hoy solo lee. Crear, editar y borrar movimientos
-todavia no se puede hacer desde la interfaz.
+Pendiente: se pueden crear movimientos, pero todavia no editarlos ni borrarlos.
+
+## ✨ Que hace
+
+- **Registro y acceso** con JWT. Al registrarse se siembran categorias de
+  partida, para poder anotar el primer movimiento sin configurar nada antes.
+- **Panel mensual** con totales, evolucion a lo largo del ano, desglose por
+  categoria y tabla de movimientos. Cada bloque se pliega y, plegado, resume su
+  contenido en una linea.
+- **Alta de movimientos** en un dialogo, con las categorias filtradas segun el
+  tipo: la API rechaza un gasto con categoria de ingresos, asi que ni se ofrece.
+- **Filtros** por concepto, tipo y categoria, resueltos en cliente sobre los
+  datos ya cargados.
+- **Espanol e ingles**, conmutables desde la cabecera. No solo los textos:
+  tambien las fechas, los importes y los nombres de los meses siguen al idioma.
+- **Tema claro y oscuro**, sin parpadeo al cargar.
 
 ## 🖼️ Vista previa
 
@@ -68,11 +83,28 @@ Otros comandos:
 
     src/
       app/          Rutas y paginas (App Router)
-      components/   Cabecera, grafica y piezas reutilizables
+      components/   Cabecera, grafica, dialogos y piezas reutilizables
       lib/
         api/        Cliente HTTP, sesion y modo demostracion
+        i18n/       Diccionarios, idioma activo y formatos por idioma
+        derive.ts   Totales, series y agrupaciones a partir de los movimientos
         types.ts    Tipos que reflejan los DTOs de la API
         mock.ts     Datos de ejemplo para cuando no hay API configurada
+
+## 🌍 Idiomas
+
+Los textos viven en `src/lib/i18n/messages.ts`, en dos diccionarios planos. El
+ingles se declara como `Record<MessageKey, string>`, de modo que **anadir una
+clave sin traducirla rompe la compilacion**: es la forma barata de que las dos
+versiones no se separen.
+
+El idioma se guarda en el navegador y, si no hay nada guardado, se deduce del
+propio navegador. Los importes y las fechas se formatean con `Intl` segun el
+idioma activo, asi que en espanol se lee `1.234,56 €` y en ingles `€1,234.56`.
+
+Los mensajes de error no viajan como frases: la API devuelve un codigo
+(`email_already_exists`, `category_type_mismatch`...) y es el frontend quien
+decide que se lee y en que idioma.
 
 ## 🔌 Conexion con la API
 
@@ -103,9 +135,9 @@ sobre codigo que ya estaba en produccion.
 
 ## 🗺️ Proximos pasos
 
-- CRUD completo de transacciones, categorias y presupuestos
-- Cuenta de demostracion en solo lectura
-- Filtros y busqueda de movimientos
+- Editar y borrar movimientos
+- Crear categorias desde el propio formulario de alta
+- Presupuestos
 
 ## ✍️ Autor
 

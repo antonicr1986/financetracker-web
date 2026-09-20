@@ -4,6 +4,7 @@ import type {
   LoginResponseDto,
   PagedResult,
   TransactionDto,
+  TransactionType,
   UserDto,
 } from "@/lib/types";
 import { mockTransactions } from "@/lib/mock";
@@ -344,6 +345,25 @@ export async function getCategories(): Promise<CategoryDto[]> {
   }
 
   return request<CategoryDto[]>("/api/Categories");
+}
+
+/**
+ * POST /api/Categories. El tipo no se pregunta: una categoria creada desde el
+ * dialogo de un movimiento hereda el del movimiento, que es el unico con el que
+ * la API la aceptaria despues.
+ */
+export async function createCategory(
+  name: string,
+  type: TransactionType,
+): Promise<CategoryDto> {
+  if (isUsingMockData()) {
+    throw new ApiError("api_not_configured", 0);
+  }
+
+  return request<CategoryDto>("/api/Categories", {
+    method: "POST",
+    body: JSON.stringify({ name, type }),
+  });
 }
 
 export async function createTransaction(

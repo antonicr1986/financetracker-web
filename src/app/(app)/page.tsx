@@ -128,6 +128,7 @@ export default function Home() {
   const tag = intlTag(locale);
   const [allTransactions, setAllTransactions] = useState<TransactionDto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSlow, setIsSlow] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
 
@@ -169,6 +170,15 @@ export default function Home() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Mismo caso que en el acceso: la base de datos de Azure se pausa sola y
+  // despertarla lleva su tiempo. Desde fuera solo se ve un esqueleto quieto, y
+  // sin explicacion parece que la aplicacion esta rota.
+  useEffect(() => {
+    if (!isLoading) return;
+    const timer = setTimeout(() => setIsSlow(true), 4000);
+    return () => clearTimeout(timer);
+  }, [isLoading]);
 
   // El dialogo devuelve ya el mes (AAAA-MM) que conviene mostrar despues: el
   // del movimiento guardado, o el del borrado, que puede no ser el que se
@@ -256,7 +266,7 @@ export default function Home() {
     : null;
 
   if (isLoading) {
-    return <DashboardSkeleton />;
+    return <DashboardSkeleton isSlow={isSlow} />;
   }
 
   const showRedirectNotice = error === t("apiError.api_not_configured");
@@ -318,15 +328,17 @@ export default function Home() {
         {mockMode && (
           <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-200">
             <p className="font-medium">{t("dashboard.demoTitle")}</p>
+            {/* Partido en dos claves porque lleva un enlace en medio: t()
+                devuelve texto, no JSX, y no puede insertar el <a>. */}
             <p className="mt-1">
-              Estás usando datos de demostración. Ve a{" "}
+              {t("dashboard.demoBodyStart")}{" "}
               <a
                 href="/settings"
                 className="font-semibold underline hover:no-underline"
               >
-                Configuración
+                {t("header.settings")}
               </a>{" "}
-              para conectar tu API real.
+              {t("dashboard.demoBodyEnd")}
             </p>
           </div>
         )}
@@ -569,10 +581,21 @@ function SkeletonCard() {
   );
 }
 
-function DashboardSkeleton() {
+function DashboardSkeleton({ isSlow }: { isSlow: boolean }) {
+  const t = useT();
+
   return (
     <main>
       <div className="mx-auto max-w-5xl px-4 py-8">
+        {isSlow && (
+          <p
+            role="status"
+            className="mb-6 rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+          >
+            {t("dashboard.wakingUp")}
+          </p>
+        )}
+
         <div className="h-8 w-40 animate-pulse rounded bg-slate-300 dark:bg-slate-800" />
         <div className="mt-2 h-4 w-32 animate-pulse rounded bg-slate-300 dark:bg-slate-800" />
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
+  createCategory,
   createTransaction,
   deleteTransaction,
   getCategories,
@@ -11,8 +12,10 @@ import type { CategoryDto, TransactionDto, TransactionType } from "@/lib/types";
 import { useT } from "@/lib/i18n/useT";
 import { useApiErrorMessage } from "@/lib/i18n/useApiError";
 
-const inputClasses =
-  "mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-slate-500 dark:focus:ring-slate-800";
+const fieldClasses =
+  "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:bg-slate-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-slate-500 dark:focus:ring-slate-800";
+
+const inputClasses = `mt-1.5 ${fieldClasses}`;
 
 const labelClasses =
   "block text-sm font-medium text-slate-700 dark:text-slate-300";
@@ -84,7 +87,11 @@ export default function TransactionDialog({
   const [isDeleting, setIsDeleting] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
 
-  const isBusy = isSaving || isDeleting;
+  const [isAddingCategory, setIsAddingCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [isCreatingCategory, setIsCreatingCategory] = useState(false);
+
+  const isBusy = isSaving || isDeleting || isCreatingCategory;
 
   // La API rechaza un movimiento cuyo tipo no coincida con el de su categoria,
   // asi que el desplegable solo ofrece las del tipo elegido.
@@ -117,6 +124,44 @@ export default function TransactionDialog({
   function changeType(next: TransactionType) {
     setType(next);
     setCategoryId("");
+
+    // La categoria a medio escribir era del tipo anterior: se descarta en lugar
+    // de crearla con un tipo que ya no es el que el usuario tiene delante.
+    setIsAddingCategory(false);
+    setNewCategoryName("");
+  }
+
+  /**
+   * Alta de categoria sin salir del dialogo.
+   *
+   * Sin esto, quien eligiera un tipo del que no tiene ninguna categoria se
+   * quedaba sin salida: el aviso decia que no habia ninguna y ahi se acababa.
+   * La categoria hereda el tipo del movimiento, que es el unico con el que la
+   * API la aceptaria despues.
+   */
+  async function handleCreateCategory() {
+    const name = newCategoryName.trim();
+
+    if (!name) {
+      setError(t("errors.writeCategoryName"));
+      return;
+    }
+
+    setError(null);
+    setIsCreatingCategory(true);
+
+    try {
+      const created = await createCategory(name, type);
+
+      setCategories((current) => [...current, created]);
+      setCategoryId(String(created.id));
+      setNewCategoryName("");
+      setIsAddingCategory(false);
+    } catch (cause: unknown) {
+      setError(describeError(cause, "errors.createCategoryFailed"));
+    } finally {
+      setIsCreatingCategory(false);
+    }
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -280,6 +325,64 @@ export default function TransactionDialog({
             {t("dialog.noCategoriesOfType")}
           </p>
         )}
+
+        {!isLoadingCategories &&
+          (isAddingCategory ? (
+            // Un <input> suelto, no un <form>: esto vive dentro del formulario
+            // del movimiento y anidar formularios no es HTML valido. Por eso
+            // hay que interceptar tambien el Enter, que si no enviaria el de
+            // fuera y guardaria el movimiento a medias.
+            <div className="mt-2 flex gap-2">
+              <label className="sr-only" htmlFor="mov-categoria-nueva">
+                {t("dialog.newCategory")}
+              </label>
+              <input
+                id="mov-categoria-nueva"
+                type="text"
+                maxLength={100}
+                autoFocus
+                value={newCategoryName}
+                onChange={(event) => setNewCategoryName(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    void handleCreateCategory();
+                  }
+                }}
+                disabled={isBusy}
+                className={fieldClasses}
+                placeholder={t("dialog.newCategoryPlaceholder")}
+              />
+              <button
+                type="button"
+                onClick={handleCreateCategory}
+                disabled={isBusy}
+                className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium whitespace-nowrap text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
+              >
+                {isCreatingCategory ? t("dialog.saving") : t("dialog.add")}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsAddingCategory(false);
+                  setNewCategoryName("");
+                }}
+                disabled={isBusy}
+                className="rounded-lg px-2 py-2 text-sm font-medium whitespace-nowrap text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+              >
+                {t("dialog.cancel")}
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setIsAddingCategory(true)}
+              disabled={isBusy}
+              className="mt-2 text-sm font-medium text-slate-600 underline-offset-2 transition hover:text-slate-900 hover:underline dark:text-slate-400 dark:hover:text-slate-100"
+            >
+              {t("dialog.newCategory")}
+            </button>
+          ))}
 
         {error && (
           <p

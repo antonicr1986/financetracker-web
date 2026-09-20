@@ -143,13 +143,13 @@ export default function MonthlyChart({
 
       <details className="mt-4">
         <summary className="cursor-pointer text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200">
-          Ver datos
+          {t("dashboard.showData")}
         </summary>
         <div className="overflow-x-auto">
           <table className="mt-2 w-full text-sm">
             <thead>
               <tr className="text-left text-xs text-slate-400 dark:text-slate-500">
-                <th className="py-1 font-medium">Mes</th>
+                <th className="py-1 font-medium">{t("table.month")}</th>
                 <th className="py-1 text-right font-medium">{t("dashboard.income")}</th>
                 <th className="py-1 text-right font-medium">{t("dashboard.expenses")}</th>
               </tr>

@@ -89,6 +89,7 @@ export const es = {
   "dashboard.demoBodyStart": "Estás viendo datos de ejemplo. Ve a",
   "dashboard.demoBodyEnd": "para conectar tu API real.",
   "dashboard.wakingUp": "El servidor estaba en reposo y está despertando. Esto puede tardar unos segundos.",
+  "dashboard.showData": "Ver datos",
   "dashboard.demoBody": "Estás usando datos de demostración. Ve a {link} para conectar tu API real.",
 
   "table.date": "Fecha",
@@ -96,6 +97,7 @@ export const es = {
   "table.category": "Categoría",
   "table.amount": "Importe",
   "table.noCategory": "Sin categoría",
+  "table.month": "Mes",
   "table.actions": "Acciones",
   "table.edit": "Editar",
   "table.editOne": "Editar {concept}",
@@ -286,6 +288,7 @@ export const en: Record<MessageKey, string> = {
   "dashboard.demoBodyStart": "You are looking at sample data. Go to",
   "dashboard.demoBodyEnd": "to connect your real API.",
   "dashboard.wakingUp": "The server was idle and is waking up. This can take a few seconds.",
+  "dashboard.showData": "Show data",
   "dashboard.demoBody": "You are looking at demo data. Go to {link} to connect your own API.",
 
   "table.date": "Date",
@@ -293,6 +296,7 @@ export const en: Record<MessageKey, string> = {
   "table.category": "Category",
   "table.amount": "Amount",
   "table.noCategory": "No category",
+  "table.month": "Month",
   "table.actions": "Actions",
   "table.edit": "Edit",
   "table.editOne": "Edit {concept}",

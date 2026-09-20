@@ -47,15 +47,31 @@ breaking, which keeps it runnable without a backend.
 
 ## 🖼️ Preview
 
-Dashboard, light and dark:
+The dashboard, in light and dark themes: the month's totals, the budgets with
+how much of each is spent, and the trend across the year.
 
 ![Dashboard in light mode](screenshots/dashboard-light.png)
 ![Dashboard in dark mode](screenshots/dashboard-dark.png)
 
-Sign in:
+Every block collapses and, once collapsed, sums itself up in a single line: the
+balance, how many budgets are still within their limit, the range of months, the
+largest expense category and the number of transactions. The whole month at a
+glance.
+
+![Dashboard with every block collapsed](screenshots/main-collapsed.png)
+
+The breakdown by category and the transaction table, with filters by
+description, type and category.
+
+![Breakdown and transactions](screenshots/dashboard-transactions.png)
+
+Recording a transaction, in a native dialog.
+
+![Recording a transaction](screenshots/new-transaction.png)
+
+The sign-in screen, with one-click entry into the demo account.
 
 ![Sign in screen](screenshots/login.png)
-
 ## 🧰 Stack
 
 - **Next.js 16** with the App Router

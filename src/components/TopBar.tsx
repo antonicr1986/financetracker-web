@@ -8,6 +8,7 @@ import HeaderNavLink from "@/components/HeaderNavLink";
 import { setToken, setUser } from "@/lib/api/client";
 import { useHasSession } from "@/lib/useSession";
 import LocaleToggle from "@/components/LocaleToggle";
+import StableLabel from "@/components/StableLabel";
 import { useT } from "@/lib/i18n/useT";
 
 const actionClasses =
@@ -62,7 +63,7 @@ export default function TopBar() {
               onClick={handleLogout}
               className={`${actionClasses} cursor-pointer border-slate-300 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800`}
             >
-              {t("header.signOut")}
+              <StableLabel messageKey="header.signOut" />
             </button>
           ) : (
             <button
@@ -71,7 +72,7 @@ export default function TopBar() {
               title={t("header.noSession")}
               className={`${actionClasses} cursor-not-allowed border-slate-200 text-slate-400 dark:border-slate-800 dark:text-slate-600`}
             >
-              Salir
+              <StableLabel messageKey="header.signOut" />
             </button>
           )}
         </div>

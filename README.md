@@ -39,6 +39,9 @@ breaking, which keeps it runnable without a backend.
 - **Monthly budgets**, per category or across a whole type, with a progress bar
   and what is left. The spent amount, the remainder and the percentage are
   computed by the API, not derived in the browser.
+- **Managing categories** from the dashboard: creating, renaming and deleting,
+  grouped by type. The API refuses to delete a category that still has
+  transactions, and that reason reaches the user in their own language.
 - **Filters** by description, type and category, resolved on the client over the
   data already loaded.
 - **Spanish and English**, switchable from the header. Not just the wording:
@@ -176,8 +179,9 @@ code that was already live.
 
 ## 🗺️ Roadmap
 
-- Managing categories: renaming and deleting, not just creating
 - More tests around the dashboard filters
+- Localised validation messages (the ones ASP.NET generates are still English)
+- Starter categories seeded in the language chosen at sign-up
 
 ## ✍️ Author
 

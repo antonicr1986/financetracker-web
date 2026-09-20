@@ -39,6 +39,9 @@ de romperse. Eso permite levantarla sin backend.
 - **Presupuestos mensuales**, por categoria o para un tipo entero, con barra de
   progreso y lo que queda. Lo gastado, el resto y el porcentaje los calcula la
   API; no se derivan en el navegador.
+- **Gestion de categorias** desde el panel: crear, renombrar y borrar, agrupadas
+  por tipo. La API se niega a borrar una categoria que todavia tiene
+  movimientos, y ese motivo le llega al usuario en su idioma.
 - **Filtros** por concepto, tipo y categoria, resueltos en cliente sobre los
   datos ya cargados.
 - **Espanol e ingles**, conmutables desde la cabecera. No solo los textos:
@@ -177,8 +180,9 @@ sobre codigo que ya estaba en produccion.
 
 ## 🗺️ Proximos pasos
 
-- Gestion de categorias: renombrar y borrar, no solo crear
 - Mas pruebas sobre los filtros del panel
+- Mensajes de validacion traducidos (los que genera ASP.NET siguen en ingles)
+- Categorias de partida sembradas en el idioma elegido al registrarse
 
 ## ✍️ Autor
 

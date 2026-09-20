@@ -47,15 +47,30 @@ de romperse. Eso permite levantarla sin backend.
 
 ## 🖼️ Vista previa
 
-El dashboard, en claro y en oscuro:
+El panel, en tema claro y oscuro: los totales del mes, los presupuestos con lo
+que llevas gastado de cada uno, y la evolucion a lo largo del ano.
 
-![Dashboard en tema claro](screenshots/dashboard-light.png)
-![Dashboard en tema oscuro](screenshots/dashboard-dark.png)
+![Panel en tema claro](screenshots/dashboard-light.png)
+![Panel en tema oscuro](screenshots/dashboard-dark.png)
 
-Pantalla de acceso:
+Cada bloque se pliega y, plegado, se resume en una linea: el saldo, cuantos
+presupuestos van dentro del limite, el rango de meses, la categoria de mayor
+gasto y el numero de movimientos. El mes entero de un vistazo.
+
+![Panel con los bloques plegados](screenshots/main-collapsed.png)
+
+El desglose por categoria y la tabla de movimientos, con los filtros por
+concepto, tipo y categoria.
+
+![Desglose y movimientos](screenshots/dashboard-transactions.png)
+
+El alta de un movimiento, en un dialogo nativo.
+
+![Alta de un movimiento](screenshots/new-transaction.png)
+
+La pantalla de acceso, con entrada directa a la cuenta de demostracion.
 
 ![Pantalla de acceso](screenshots/login.png)
-
 ## 🧰 Stack
 
 - **Next.js 16** con App Router

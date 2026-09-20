@@ -26,8 +26,6 @@ registering.
 When no API is configured the interface falls back to sample data rather than
 breaking, which keeps it runnable without a backend.
 
-Still missing: transactions can be created, but not yet edited or deleted.
-
 ## ✨ What it does
 
 - **Sign-up and sign-in** with JWT. Registering seeds a starting set of
@@ -35,8 +33,9 @@ Still missing: transactions can be created, but not yet edited or deleted.
 - **Monthly dashboard** with totals, a trend across the year, a breakdown by
   category and a transaction table. Every block collapses and, once collapsed,
   sums itself up in a single line.
-- **Creating transactions** in a dialog, with categories filtered by type: the
-  API rejects an expense filed under an income category, so it is never offered.
+- **Creating, editing and deleting transactions** in a dialog, with categories
+  filtered by type: the API rejects an expense filed under an income category,
+  so it is never offered. Deleting asks for confirmation in the dialog itself.
 - **Filters** by description, type and category, resolved on the client over the
   data already loaded.
 - **Spanish and English**, switchable from the header. Not just the wording:
@@ -134,8 +133,7 @@ code that was already live.
 
 ## 🗺️ Roadmap
 
-- Editing and deleting transactions
-- Creating categories from the new-transaction form
+- Creating categories from the transaction form
 - Budgets
 
 ## ✍️ Author

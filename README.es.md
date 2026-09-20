@@ -26,8 +26,6 @@ aplicacion sin registrarse.
 Si no hay ninguna API configurada, la interfaz cae en datos de ejemplo en lugar
 de romperse. Eso permite levantarla sin backend.
 
-Pendiente: se pueden crear movimientos, pero todavia no editarlos ni borrarlos.
-
 ## ✨ Que hace
 
 - **Registro y acceso** con JWT. Al registrarse se siembran categorias de
@@ -35,8 +33,9 @@ Pendiente: se pueden crear movimientos, pero todavia no editarlos ni borrarlos.
 - **Panel mensual** con totales, evolucion a lo largo del ano, desglose por
   categoria y tabla de movimientos. Cada bloque se pliega y, plegado, resume su
   contenido en una linea.
-- **Alta de movimientos** en un dialogo, con las categorias filtradas segun el
-  tipo: la API rechaza un gasto con categoria de ingresos, asi que ni se ofrece.
+- **Alta, edicion y borrado de movimientos** en un dialogo, con las categorias
+  filtradas segun el tipo: la API rechaza un gasto con categoria de ingresos,
+  asi que ni se ofrece. El borrado pide confirmacion en el propio dialogo.
 - **Filtros** por concepto, tipo y categoria, resueltos en cliente sobre los
   datos ya cargados.
 - **Espanol e ingles**, conmutables desde la cabecera. No solo los textos:
@@ -135,8 +134,7 @@ sobre codigo que ya estaba en produccion.
 
 ## 🗺️ Proximos pasos
 
-- Editar y borrar movimientos
-- Crear categorias desde el propio formulario de alta
+- Crear categorias desde el propio formulario de movimientos
 - Presupuestos
 
 ## ✍️ Autor

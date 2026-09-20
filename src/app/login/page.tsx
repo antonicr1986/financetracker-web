@@ -8,11 +8,11 @@ import {
   setToken,
   setUser,
   clearSessionExpired,
-  isUsingMockData,
 } from "@/lib/api/client";
 import { getAndClearReturnUrl } from "@/lib/useSessionGuard";
 import { useMockMode } from "@/lib/useMockMode";
 import { useT } from "@/lib/i18n/useT";
+import { useApiErrorMessage } from "@/lib/i18n/useApiError";
 import SessionExpiredBanner from "@/components/SessionExpiredBanner";
 import Link from "next/link";
 
@@ -25,6 +25,7 @@ export default function LoginPage() {
   const router = useRouter();
   const mockMode = useMockMode();
   const t = useT();
+  const describeError = useApiErrorMessage();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -64,15 +65,7 @@ export default function LoginPage() {
       const returnUrl = getAndClearReturnUrl();
       router.push(returnUrl || "/");
     } catch (cause: unknown) {
-      if (cause instanceof Error) {
-        setError(cause.message);
-      } else {
-        setError(
-          isUsingMockData()
-            ? t("errors.signInFailed")
-            : t("errors.serverUnreachable")
-        );
-      }
+      setError(describeError(cause, "errors.signInFailed"));
     } finally {
       setIsSubmitting(false);
     }

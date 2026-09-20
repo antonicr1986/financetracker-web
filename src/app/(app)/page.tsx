@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import MonthlyChart from "@/components/MonthlyChart";
 import CollapsibleSection from "@/components/CollapsibleSection";
 import NewTransactionDialog from "@/components/NewTransactionDialog";
-import { getTransactions } from "@/lib/api/client";
+import { ApiError, getTransactions } from "@/lib/api/client";
 import { useMockMode } from "@/lib/useMockMode";
 import { useT } from "@/lib/i18n/useT";
+import { useApiErrorMessage } from "@/lib/i18n/useApiError";
 import { useFormatters, intlTag } from "@/lib/i18n/format";
 import {
   availableMonths,
@@ -86,6 +87,7 @@ export default function Home() {
   const router = useRouter();
   const mockMode = useMockMode();
   const t = useT();
+  const describeError = useApiErrorMessage();
   const { currency, locale } = useFormatters();
   const tag = intlTag(locale);
   const [allTransactions, setAllTransactions] = useState<TransactionDto[]>([]);
@@ -109,20 +111,17 @@ export default function Home() {
           setError(null);
         })
         .catch((cause: unknown) => {
-          const message =
-            cause instanceof Error
-              ? cause.message
-              : t("errors.loadFailed");
-          setError(message);
+          setError(describeError(cause, "errors.loadFailed"));
 
           // Sin API configurada no hay nada que reintentar: se lleva al usuario
-          // a la pantalla donde puede indicarla.
-          if (message.includes("API no configurada")) {
+          // a la pantalla donde puede indicarla. Se comprueba el codigo y no el
+          // texto, que ahora depende del idioma.
+          if (cause instanceof ApiError && cause.code === "api_not_configured") {
             setTimeout(() => router.push("/settings"), 2000);
           }
         })
         .finally(() => setIsLoading(false)),
-    [router, t],
+    [router, describeError],
   );
 
   useEffect(() => {
@@ -215,13 +214,15 @@ export default function Home() {
     return <DashboardSkeleton />;
   }
 
+  const showRedirectNotice = error === t("apiError.api_not_configured");
+
   if (error) {
     return (
       <main className="mx-auto max-w-5xl px-4 py-8">
         <div className="rounded-xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-800 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-200">
           <p className="font-medium">{t("dashboard.loadError")}</p>
           <p className="mt-1">{error}</p>
-          {error.includes("API no configurada") && (
+          {showRedirectNotice && (
             <p className="mt-2 text-xs">
               {t("dashboard.redirecting")}
             </p>

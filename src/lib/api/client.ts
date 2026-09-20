@@ -168,12 +168,32 @@ export function isUsingMockData(): boolean {
   return !getApiUrl();
 }
 
+/**
+ * Identificador del problema, no su texto.
+ *
+ * El cliente no puede traducir: es un modulo normal, no un componente, asi que
+ * no tiene acceso a los hooks. Antes fabricaba frases en espanol que se
+ * colaban tal cual en la interfaz aunque estuviera en ingles. Ahora propaga un
+ * codigo y es el componente —que si puede traducir— quien decide que se lee.
+ *
+ * `serverCode` llega de la API cuando esta identifica el caso concreto
+ * (email_already_exists, category_type_mismatch...). Tiene prioridad sobre el
+ * generico, porque dice mucho mas.
+ */
+export type ApiErrorCode =
+  | "api_not_configured"
+  | "session_expired"
+  | "invalid_request"
+  | "server_error"
+  | "network_error";
+
 export class ApiError extends Error {
   constructor(
-    message: string,
+    readonly code: ApiErrorCode,
     readonly status: number,
+    readonly serverCode?: string,
   ) {
-    super(message);
+    super(serverCode ?? code);
     this.name = "ApiError";
   }
 }
@@ -228,7 +248,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const baseUrl = getApiUrl();
 
   if (!baseUrl) {
-    throw new Error("API no configurada. Ve a Configuración para establecer la URL.");
+    throw new ApiError("api_not_configured", 0);
   }
 
   const token = getToken();
@@ -252,22 +272,19 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       setUser(null);
     }
 
-    // El 401 conserva su texto: el mensaje del servidor ("Invalid email or
-    // password") esta en ingles y no distingue caducidad de credenciales.
-    const serverMessage =
+    const serverCode =
       response.status === 401 ? null : await readServerMessage(response);
 
-    const message =
-      serverMessage ??
-      (response.status === 401
-        ? "Tu sesión ha caducado. Por favor, inicia sesión de nuevo."
+    const code: ApiErrorCode =
+      response.status === 401
+        ? "session_expired"
         : response.status === 400
-          ? "Datos inválidos."
-          : response.status === 500
-            ? "Error del servidor. Intenta más tarde."
-            : "No se ha podido contactar con el servidor.");
+          ? "invalid_request"
+          : response.status >= 500
+            ? "server_error"
+            : "network_error";
 
-    throw new ApiError(message, response.status);
+    throw new ApiError(code, response.status, serverCode ?? undefined);
   }
 
   return (await response.json()) as T;
@@ -318,9 +335,7 @@ export async function createTransaction(
   input: CreateTransactionInput,
 ): Promise<TransactionDto> {
   if (isUsingMockData()) {
-    throw new Error(
-      "No hay ninguna API configurada: en modo demostración no se pueden guardar movimientos.",
-    );
+    throw new ApiError("api_not_configured", 0);
   }
 
   return request<TransactionDto>("/api/Transactions", {

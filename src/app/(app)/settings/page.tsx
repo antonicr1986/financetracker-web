@@ -8,6 +8,7 @@ import {
     setToken,
     setUser,
 } from "@/lib/api/client";
+import { useT } from "@/lib/i18n/useT";
 
 const STORAGE_KEY = "financetracker.api.url";
 
@@ -25,6 +26,7 @@ function getSavedApiUrl(): string {
 
 export default function SettingsPage() {
     const router = useRouter();
+    const t = useT();
     // El valor guardado se lee con useSyncExternalStore para que servidor y
     // cliente pinten lo mismo en el primer render. El borrador es lo que el
     // usuario esta escribiendo; mientras sea null manda lo guardado.
@@ -49,7 +51,7 @@ export default function SettingsPage() {
         setIsSaved(false);
 
         if (!apiUrl.trim()) {
-            setError("Por favor ingresa una URL válida.");
+            setError(t("settings.invalidUrl"));
             return;
         }
 
@@ -61,7 +63,7 @@ export default function SettingsPage() {
                 setTimeout(() => setIsSaved(false), 3000);
             }
         } catch {
-            setError("No se pudo guardar la configuración.");
+            setError(t("settings.saveFailed"));
         }
     }
 
@@ -82,17 +84,22 @@ export default function SettingsPage() {
             });
 
             if (response.status === 401) {
-                setTestResult("✓ Conexión exitosa (credenciales inválidas, pero el servidor responde)");
+                setTestResult(t("settings.testOkUnauthorized"));
             } else if (response.ok) {
-                setTestResult("✓ Conexión exitosa");
+                setTestResult(t("settings.testOk"));
             } else {
                 setTestResult(
-                    `✗ Error del servidor: ${response.status} ${response.statusText}`
+                    t("settings.testServerError", {
+                        status: response.status,
+                        text: response.statusText,
+                    })
                 );
             }
         } catch (err) {
             setTestResult(
-                `✗ No se pudo conectar: ${err instanceof Error ? err.message : "Error desconocido"}`
+                t("settings.testFailed", {
+                    reason: err instanceof Error ? err.message : t("settings.unknownError"),
+                })
             );
         } finally {
             setIsTesting(false);
@@ -110,10 +117,10 @@ export default function SettingsPage() {
             <div className="mx-auto max-w-2xl px-4 py-8">
                 <header className="mb-8">
                     <h1 className="text-3xl font-semibold text-slate-900 dark:text-slate-100">
-                        Configuración
+                        {t("settings.title")}
                     </h1>
                     <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                        Configura la conexión a la API de FinanceTracker
+                        {t("settings.subtitle")}
                     </p>
                 </header>
 
@@ -121,7 +128,7 @@ export default function SettingsPage() {
                     {/* API Configuration */}
                     <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                         <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">
-                            Conexión a API
+                            {t("settings.apiSection")}
                         </h2>
 
                         <form onSubmit={handleSave} className="space-y-4">
@@ -130,7 +137,7 @@ export default function SettingsPage() {
                                     htmlFor="apiUrl"
                                     className="block text-sm font-medium text-slate-700 dark:text-slate-300"
                                 >
-                                    URL de la API
+                                    {t("settings.apiUrl")}
                                 </label>
                                 <input
                                     id="apiUrl"
@@ -142,8 +149,8 @@ export default function SettingsPage() {
                                 />
                                 <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
                                     {defaultApiUrl
-                                        ? `Dejalo vacio para usar la de por defecto: ${defaultApiUrl}`
-                                        : "Ejemplo: http://localhost:5279 o https://api.tu-dominio.com"}
+                                        ? t("settings.useDefault", { url: defaultApiUrl })
+                                        : t("settings.example")}
                                 </p>
                             </div>
 
@@ -155,7 +162,7 @@ export default function SettingsPage() {
 
                             {isSaved && (
                                 <div className="rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-                                    ✓ Configuración guardada correctamente
+                                    {t("settings.saved")}
                                 </div>
                             )}
 
@@ -164,7 +171,7 @@ export default function SettingsPage() {
                                     type="submit"
                                     className="flex-1 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
                                 >
-                                    Guardar
+                                    {t("settings.save")}
                                 </button>
                                 <button
                                     type="button"
@@ -172,7 +179,7 @@ export default function SettingsPage() {
                                     disabled={!apiUrl || isTesting}
                                     className="flex-1 rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 dark:disabled:bg-slate-800 dark:disabled:text-slate-500"
                                 >
-                                    {isTesting ? "Probando..." : "Probar conexión"}
+                                    {isTesting ? t("settings.testing") : t("settings.test")}
                                 </button>
                             </div>
 
@@ -192,30 +199,30 @@ export default function SettingsPage() {
                     {/* Current Status */}
                     <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                         <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">
-                            Estado
+                            {t("settings.status")}
                         </h2>
 
                         <div className="space-y-3">
                             <div>
                                 <p className="text-sm text-slate-500 dark:text-slate-400">
-                                    API URL
+                                    {t("settings.apiUrl")}
                                 </p>
                                 <p className="mt-1 font-mono text-sm text-slate-900 dark:text-slate-100">
-                                    {effectiveApiUrl || "No configurada"}
+                                    {effectiveApiUrl || t("settings.notConfigured")}
                                 </p>
                                 {!savedApiUrl && effectiveApiUrl && (
                                     <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                                        Valor por defecto de la compilacion.
+                                        {t("settings.fromBuild")}
                                     </p>
                                 )}
                             </div>
 
                             <div>
                                 <p className="text-sm text-slate-500 dark:text-slate-400">
-                                    Sesión
+                                    {t("settings.session")}
                                 </p>
                                 <p className="mt-1 text-sm text-slate-900 dark:text-slate-100">
-                                    {token ? "Activa" : "Inactiva"}
+                                    {token ? t("settings.sessionActive") : t("settings.sessionInactive")}
                                 </p>
                             </div>
                         </div>
@@ -226,7 +233,7 @@ export default function SettingsPage() {
                         onClick={handleLogout}
                         className="w-full rounded-lg border border-rose-300 px-4 py-2.5 text-sm font-medium text-rose-700 transition hover:bg-rose-50 dark:border-rose-700 dark:text-rose-300 dark:hover:bg-rose-950"
                     >
-                        Cerrar sesión
+                        {t("settings.signOut")}
                     </button>
                 </div>
             </div>

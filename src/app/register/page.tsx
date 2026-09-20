@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { login, register, setToken, setUser } from "@/lib/api/client";
 import { useT } from "@/lib/i18n/useT";
+import { useApiErrorMessage } from "@/lib/i18n/useApiError";
 
 const inputClasses =
   "mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-600 dark:focus:border-slate-500 dark:focus:ring-slate-800 dark:disabled:bg-slate-900";
@@ -15,6 +16,7 @@ const labelClasses =
 export default function RegisterPage() {
   const router = useRouter();
   const t = useT();
+  const describeError = useApiErrorMessage();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -58,11 +60,7 @@ export default function RegisterPage() {
       setUser(session.user ?? null);
       router.push("/");
     } catch (cause: unknown) {
-      setError(
-        cause instanceof Error
-          ? cause.message
-          : t("errors.createAccountFailed"),
-      );
+      setError(describeError(cause, "errors.createAccountFailed"));
       setIsSubmitting(false);
     }
   }

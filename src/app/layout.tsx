@@ -15,9 +15,34 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// Base absoluta para og:image y demas URLs de metadata. Sin esto Next emite
+// rutas relativas y WhatsApp/Telegram no pueden descargar la imagen.
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://financetracker-web-tau.vercel.app";
+
+const title = "Finance tracker App";
+const description = "Track your finances with ease";
+
 export const metadata: Metadata = {
-  title: "Finance tracker App",
-  description: "Track your finances with ease",
+  metadataBase: new URL(siteUrl),
+  title,
+  description,
+  applicationName: "Finance Tracker",
+  // Los iconos y la tarjeta salen de los archivos de src/app:
+  // icon.svg, favicon.ico, apple-icon.png, opengraph-image.jpg, twitter-image.jpg
+  openGraph: {
+    type: "website",
+    url: siteUrl,
+    siteName: "Finance Tracker",
+    locale: "es_ES",
+    title,
+    description,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+  },
 };
 
 

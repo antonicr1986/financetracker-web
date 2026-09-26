@@ -10,6 +10,7 @@ import type {
   UserDto,
 } from "@/lib/types";
 import { mockTransactions } from "@/lib/mock";
+import type { Locale } from "@/lib/i18n/locale";
 
 const API_URL_STORAGE_KEY = "financetracker.api.url";
 const TOKEN_KEY = "financetracker.token"; // gitleaks:allow
@@ -487,6 +488,7 @@ export async function register(
   name: string,
   email: string,
   password: string,
+  language: Locale,
 ): Promise<UserDto> {
   if (isUsingMockData()) {
     await delay(500);
@@ -494,9 +496,11 @@ export async function register(
   }
 
   // Devuelve el usuario creado, no un token: hay que iniciar sesion despues.
+  // El idioma hace que la API siembre las categorias de partida en el que se
+  // esta viendo la aplicacion ("Groceries" y no "Supermercado" en ingles).
   return request<UserDto>("/api/Users/register", {
     method: "POST",
-    body: JSON.stringify({ name, email, password }),
+    body: JSON.stringify({ name, email, password, language }),
   });
 }
 

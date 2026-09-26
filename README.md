@@ -35,7 +35,8 @@ breaking, which keeps it runnable without a backend.
 ## ✨ What it does
 
 - **Sign-up and sign-in** with JWT. Registering seeds a starting set of
-  categories, so the first transaction can be recorded without any setup.
+  categories in the interface language, so the first transaction can be
+  recorded without any setup.
 - **Monthly dashboard** with totals, a trend across the year, a breakdown by
   category and a transaction table. Every block collapses and, once collapsed,
   sums itself up in a single line.
@@ -195,7 +196,6 @@ code that was already live.
 ## 🗺️ Roadmap
 
 - Localised validation messages (the ones ASP.NET generates are still English)
-- Starter categories seeded in the language chosen at sign-up
 
 ## ✍️ Author
 

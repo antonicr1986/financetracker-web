@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { login, register, setToken, setUser } from "@/lib/api/client";
-import { useT } from "@/lib/i18n/useT";
+import { useLocale, useT } from "@/lib/i18n/useT";
 import { useApiErrorMessage } from "@/lib/i18n/useApiError";
 
 const inputClasses =
@@ -16,6 +16,7 @@ const labelClasses =
 export default function RegisterPage() {
   const router = useRouter();
   const t = useT();
+  const locale = useLocale();
   const describeError = useApiErrorMessage();
 
   const [name, setName] = useState("");
@@ -50,7 +51,7 @@ export default function RegisterPage() {
     setIsSubmitting(true);
 
     try {
-      await register(name.trim(), email.trim(), password);
+      await register(name.trim(), email.trim(), password, locale);
 
       // El registro no devuelve token, asi que se encadena el acceso: el
       // usuario entra directamente en lugar de tener que escribir lo mismo

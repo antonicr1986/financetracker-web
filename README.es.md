@@ -36,7 +36,7 @@ de romperse. Eso permite levantarla sin backend.
 ## ✨ Que hace
 
 - **Registro y acceso** con JWT. Al registrarse se siembran categorias de
-  partida, para poder anotar el primer movimiento sin configurar nada antes.
+  partida en el idioma de la interfaz, para poder anotar el primer movimiento sin configurar nada antes.
 - **Panel mensual** con totales, evolucion a lo largo del ano, desglose por
   categoria y tabla de movimientos. Cada bloque se pliega y, plegado, resume su
   contenido en una linea.
@@ -198,7 +198,6 @@ sobre codigo que ya estaba en produccion.
 ## 🗺️ Proximos pasos
 
 - Mensajes de validacion traducidos (los que genera ASP.NET siguen en ingles)
-- Categorias de partida sembradas en el idioma elegido al registrarse
 
 ## ✍️ Autor
 

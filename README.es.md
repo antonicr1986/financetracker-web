@@ -119,6 +119,7 @@ Otros comandos:
         api/        Cliente HTTP, sesion y modo demostracion
         i18n/       Diccionarios, idioma activo y formatos por idioma
         derive.ts   Totales, series y agrupaciones a partir de los movimientos
+        filters.ts  Los filtros del panel: buscador, tipo y categoria
         types.ts    Tipos que reflejan los DTOs de la API
         mock.ts     Datos de ejemplo para cuando no hay API configurada
       test/         Preparacion de las pruebas (jsdom, limpieza, parche de <dialog>)
@@ -153,9 +154,16 @@ Vercel exige volver a desplegar para que surta efecto.
 
 Vitest y Testing Library, con `npm test` y tambien dentro del pipeline.
 
-Son de dos tipos. `derive.test.ts` cubre las funciones puras sobre las que se
-construye el panel: totales, agrupacion por mes, desglose por categoria y que
-las etiquetas de los meses sigan al idioma elegido. `TransactionDialog.test.tsx`
+Son de dos tipos. `derive.test.ts` y `filters.test.ts` cubren las funciones
+puras sobre las que se construye el panel: totales, agrupacion por mes, desglose
+por categoria, etiquetas de los meses que siguen al idioma elegido, y los
+filtros — el buscador sin distinguir mayusculas ni espacios de los extremos,
+tipo y categoria (incluidos los movimientos sin categoria) combinados, nombres
+de categoria ordenados segun el idioma para que uno con tilde no acabe al final,
+y una categoria elegida que el mes que se ve no tiene, que vuelve a "todas" y
+reaparece sola al volver a un mes que si la tiene. Los filtros viven en
+`lib/filters.ts` y no dentro de la pagina precisamente para poder probarlos
+asi, sin React de por medio. `TransactionDialog.test.tsx`
 renderiza el dialogo con las llamadas a la API sustituidas y cubre lo que de
 verdad se rompio durante el desarrollo: que al editar los campos arrancan
 rellenos, que cambiar el tipo limpia la categoria elegida, que el borrado espera
@@ -189,7 +197,6 @@ sobre codigo que ya estaba en produccion.
 
 ## 🗺️ Proximos pasos
 
-- Mas pruebas sobre los filtros del panel
 - Mensajes de validacion traducidos (los que genera ASP.NET siguen en ingles)
 - Categorias de partida sembradas en el idioma elegido al registrarse
 

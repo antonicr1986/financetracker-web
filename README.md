@@ -118,6 +118,7 @@ Other commands:
         api/        HTTP client, session and demo mode
         i18n/       Dictionaries, active language and per-language formats
         derive.ts   Totals, series and groupings built from the transactions
+        filters.ts  The dashboard filters: search, type and category
         types.ts    Types mirroring the API DTOs
         mock.ts     Sample data used when no API is configured
       test/         Test setup (jsdom, cleanup, <dialog> patch)
@@ -152,9 +153,15 @@ it on Vercel requires a redeploy to take effect.
 
 Vitest and Testing Library, run with `npm test` and in the pipeline.
 
-Two kinds. `derive.test.ts` covers the pure functions the dashboard is built
-on: totals, grouping by month, the breakdown by category, and that month labels
-follow the chosen language. `TransactionDialog.test.tsx` renders the dialog with
+Two kinds. `derive.test.ts` and `filters.test.ts` cover the pure functions the
+dashboard is built on: totals, grouping by month, the breakdown by category,
+month labels that follow the chosen language, and the filters — search ignoring
+case and surrounding spaces, type and category (including transactions with no
+category) combined, category names sorted by language so an accented one is not
+pushed to the end, and a chosen category that the month being viewed does not
+have falling back to "all" and coming back on its own when returning to a month
+that has it. The filters live in `lib/filters.ts` rather than inside the page
+precisely so they can be tested like this, with no React involved. `TransactionDialog.test.tsx` renders the dialog with
 the API calls mocked and covers what actually broke during development: editing
 loads the fields, changing the type clears the chosen category, deleting waits
 for the confirmation, and pressing Enter in the new-category field creates the
@@ -187,7 +194,6 @@ code that was already live.
 
 ## 🗺️ Roadmap
 
-- More tests around the dashboard filters
 - Localised validation messages (the ones ASP.NET generates are still English)
 - Starter categories seeded in the language chosen at sign-up
 

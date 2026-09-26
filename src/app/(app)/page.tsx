@@ -13,6 +13,13 @@ import { useT } from "@/lib/i18n/useT";
 import { useApiErrorMessage } from "@/lib/i18n/useApiError";
 import { useFormatters, intlTag } from "@/lib/i18n/format";
 import {
+  categoryNamesOf,
+  filterTransactions,
+  hasActiveFilters,
+  resolveCategory,
+  type TypeFilter,
+} from "@/lib/filters";
+import {
   availableMonths,
   breakdownOf,
   monthLongLabel,
@@ -21,7 +28,7 @@ import {
   summaryOf,
   transactionsOfMonth,
 } from "@/lib/derive";
-import type { TransactionDto, TransactionType } from "@/lib/types";
+import type { TransactionDto } from "@/lib/types";
 
 function SummaryCard({
   label,
@@ -213,47 +220,36 @@ export default function Home() {
   // Filtros de la tabla de movimientos. Se aplican en cliente sobre los datos
   // ya cargados: la respuesta es inmediata y no rompe el resto del panel, que
   // deriva los meses, la grafica y los totales de esa misma carga completa.
-  const [typeFilter, setTypeFilter] = useState<"all" | TransactionType>("all");
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [search, setSearch] = useState("");
 
-  const categoryNames = useMemo(() => {
-    const names = new Set(
-      transactions.map((item) => item.categoryName ?? t("table.noCategory")),
-    );
-    return [...names].sort((a, b) => a.localeCompare(b, locale));
-  }, [transactions, locale, t]);
+  const noCategory = t("table.noCategory");
 
-  // Si la categoria elegida no existe en el mes que se esta viendo, se ignora.
-  // Comprobarlo aqui evita tener que reiniciar el filtro desde un efecto al
-  // cambiar de mes, que es justo lo que dispara el aviso del linter.
-  const activeCategory = categoryNames.includes(categoryFilter)
-    ? categoryFilter
-    : "all";
+  const categoryNames = useMemo(
+    () => categoryNamesOf(transactions, noCategory, locale),
+    [transactions, noCategory, locale],
+  );
 
-  const hasFilters =
-    typeFilter !== "all" || activeCategory !== "all" || search.trim() !== "";
+  // Si la categoria elegida no existe en el mes que se esta viendo, se ignora
+  // (ver resolveCategory en lib/filters.ts).
+  const activeCategory = resolveCategory(categoryFilter, categoryNames);
 
-  const visibleTransactions = useMemo(() => {
-    const needle = search.trim().toLowerCase();
+  const hasFilters = hasActiveFilters({
+    type: typeFilter,
+    category: activeCategory,
+    search,
+  });
 
-    return transactions.filter((item) => {
-      if (typeFilter !== "all" && item.type !== typeFilter) return false;
-
-      if (
-        activeCategory !== "all" &&
-        (item.categoryName ?? t("table.noCategory")) !== activeCategory
-      ) {
-        return false;
-      }
-
-      if (needle && !item.description.toLowerCase().includes(needle)) {
-        return false;
-      }
-
-      return true;
-    });
-  }, [transactions, typeFilter, activeCategory, search, t]);
+  const visibleTransactions = useMemo(
+    () =>
+      filterTransactions(
+        transactions,
+        { type: typeFilter, category: activeCategory, search },
+        noCategory,
+      ),
+    [transactions, typeFilter, activeCategory, search, noCategory],
+  );
 
   function clearFilters() {
     setTypeFilter("all");
@@ -496,7 +492,7 @@ export default function Home() {
                   id="filtro-tipo"
                   value={typeFilter}
                   onChange={(event) =>
-                    setTypeFilter(event.target.value as "all" | TransactionType)
+                    setTypeFilter(event.target.value as TypeFilter)
                   }
                   className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:focus:ring-slate-800"
                 >

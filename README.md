@@ -11,6 +11,12 @@
 Web client for [FinanceTracker](https://github.com/antonicr1986/FinanceTracker),
 a personal finance REST API built with .NET 8.
 
+**One of three clients of that API**, alongside
+[financetracker-android](https://github.com/antonicr1986/financetracker-android)
+(Kotlin) and [financetracker-desktop](https://github.com/antonicr1986/financetracker-desktop)
+(C# and WPF). The three reach the same endpoints, error codes and business rules
+from different platforms, and share the same look, languages and demo account.
+
 **[View the live application](https://financetracker-web-tau.vercel.app/login)** — one click gets you in with
 the demo account.
 
@@ -75,12 +81,14 @@ Recording a transaction, in a native dialog.
 The sign-in screen, with one-click entry into the demo account.
 
 ![Sign in screen](screenshots/login.png)
+
 ## 🧰 Stack
 
 - **Next.js 16** with the App Router
 - **TypeScript**
 - **Tailwind CSS 4**
-- Deployed on **Vercel**, with automatic deployments on every push to `main`
+- Deployed on **Vercel** from the pipeline, only once the checks pass (see
+  [Automation](#-automation))
 
 No charting or component libraries. The category breakdown is plain CSS:
 pulling in a dependency for five horizontal bars is not worth the weight.

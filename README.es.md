@@ -11,6 +11,13 @@
 Interfaz web de [FinanceTracker](https://github.com/antonicr1986/FinanceTracker),
 una API REST de finanzas personales construida con .NET 8.
 
+**Es uno de los tres clientes de esa API**, junto a
+[financetracker-android](https://github.com/antonicr1986/financetracker-android)
+(Kotlin) y [financetracker-desktop](https://github.com/antonicr1986/financetracker-desktop)
+(C# y WPF). Los tres llegan a los mismos endpoints, codigos de error y reglas de
+negocio desde plataformas distintas, y comparten estetica, idiomas y cuenta de
+demostracion.
+
 **[Ver la aplicacion desplegada](https://financetracker-web-tau.vercel.app/login)** — entra con un clic
 usando la cuenta de demostracion.
 
@@ -74,12 +81,14 @@ El alta de un movimiento, en un dialogo nativo.
 La pantalla de acceso, con entrada directa a la cuenta de demostracion.
 
 ![Pantalla de acceso](screenshots/login.png)
+
 ## 🧰 Stack
 
 - **Next.js 16** con App Router
 - **TypeScript**
 - **Tailwind CSS 4**
-- Desplegado en **Vercel**, con despliegue automatico en cada push a `main`
+- Desplegado en **Vercel** desde el pipeline, solo cuando los controles pasan
+  (ver [Automatizacion](#-automatizacion))
 
 Sin librerias de graficos ni de componentes. El desglose por categorias esta
 resuelto con CSS: cargar una dependencia entera para cinco barras

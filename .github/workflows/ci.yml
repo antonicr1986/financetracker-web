@@ -51,6 +51,12 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      # Falla si alguna dependencia (tambien las transitivas) tiene una
+      # vulnerabilidad conocida de gravedad alta o critica. --omit=dev deja
+      # fuera las herramientas de desarrollo, que no llegan al navegador.
+      - name: Vulnerable packages
+        run: npm audit --omit=dev --audit-level=high
+
       - name: Test
         run: npm test
 

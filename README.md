@@ -181,6 +181,11 @@ a deliberate choice here.
   linter, runs the tests and builds for production, so a type, test or build
   error is caught before it reaches production.
 - **Secret scanning** with gitleaks across the full history.
+- **Dependency scanning**: `npm audit` fails the build if a production
+  dependency, transitive ones included, has a high or critical vulnerability.
+- **Dependabot** opens a monthly pull request with the minor and patch updates
+  of the npm packages and the workflow actions, grouped in one; major versions
+  are left for a manual decision.
 - **Protected `main` branch** against force pushes and deletion.
 - **Deployment from the pipeline**: production deploys run as a final job that
   only starts once secret scanning and the build are green. Vercel's own Git

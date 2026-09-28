@@ -1,0 +1,32 @@
+version: 2
+
+updates:
+  # Dependencias de npm (package.json y package-lock.json)
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 3
+    # Una sola PR con todas las actualizaciones menores y de parche
+    groups:
+      dependencias:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+    # Los saltos de version mayor (Next.js, React...) merecen una decision
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  # Versiones de las acciones usadas en los workflows
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 3
+    groups:
+      acciones:
+        patterns:
+          - "*"

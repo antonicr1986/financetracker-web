@@ -183,6 +183,12 @@ porque los dialogos nativos son aqui una decision deliberada.
   ejecuta las pruebas y compila para produccion, de modo que un error de tipos,
   de pruebas o de compilacion se detecta antes de llegar a produccion.
 - **Escaneo de secretos** con gitleaks sobre el historial completo.
+- **Escaneo de dependencias**: `npm audit` hace fallar el build si una
+  dependencia de produccion, tambien las transitivas, tiene una vulnerabilidad
+  alta o critica.
+- **Dependabot** abre cada mes una pull request con las actualizaciones menores
+  y de parche de los paquetes de npm y de las acciones, agrupadas en una; las
+  versiones mayores se dejan para decidirlas a mano.
 - **Rama `main` protegida** frente a *force push* y borrado.
 - **Despliegue desde el pipeline**: la publicacion en produccion es un job final
   que solo arranca cuando el escaneo de secretos y la compilacion estan en

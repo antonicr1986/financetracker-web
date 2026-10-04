@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -13,6 +14,19 @@ import { useT } from "@/lib/i18n/useT";
 
 const actionClasses =
   "rounded-lg border px-3 py-1.5 text-sm font-medium transition";
+
+const brandClasses =
+  "flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100";
+
+/** Logo + nombre, igual que en la app de escritorio. El logo es decorativo: el texto ya da el nombre. */
+function Brand() {
+  return (
+    <>
+      <Image src="/logo.svg" alt="" width={24} height={24} priority />
+      FinanceTracker
+    </>
+  );
+}
 
 /**
  * Barra superior, compartida por la aplicacion y por la pantalla de acceso.
@@ -42,13 +56,13 @@ export default function TopBar() {
         {canNavigate ? (
           <Link
             href="/"
-            className="text-sm font-semibold text-slate-900 hover:text-slate-600 dark:text-slate-100 dark:hover:text-slate-300"
+            className={`${brandClasses} hover:text-slate-600 dark:hover:text-slate-300`}
           >
-            FinanceTracker
+            <Brand />
           </Link>
         ) : (
-          <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-            FinanceTracker
+          <span className={brandClasses}>
+            <Brand />
           </span>
         )}
 

@@ -28,7 +28,9 @@ datos desde Azure SQL y el panel calculado a partir de ellos.
 
 Hay una **cuenta de demostracion publica**. El boton de la pantalla de acceso
 entra con ella y carga datos sembrados por el backend, asi que se puede ver la
-aplicacion sin registrarse.
+aplicacion sin registrarse. La API corre en el plan gratuito de Azure y se duerme
+sin uso: la pantalla de acceso la despierta en cuanto se abre, asi que la espera
+ocurre mientras se lee — y si aun asi se alarga, la pantalla lo explica.
 
 Si no hay ninguna API configurada, la interfaz cae en datos de ejemplo en lugar
 de romperse. Eso permite levantarla sin backend.
@@ -149,6 +151,14 @@ la pantalla de Configuracion y, si no hay nada, la variable de entorno
 
 `NEXT_PUBLIC_*` se incrusta al compilar, no se lee al arrancar: cambiarla en
 Vercel exige volver a desplegar para que surta efecto.
+
+**Precalentamiento.** Al abrir la pantalla de acceso se lanza una peticion a
+`/health/ready` de la API, que tambien consulta la base de datos, sin esperar la
+respuesta. En el plan gratuito el App Service se descarga sin uso y Azure SQL
+serverless se pausa, asi que esto los arranca mientras la persona todavia esta
+leyendo la pantalla. Usa `no-cors` porque solo importa que la peticion llegue, no
+la respuesta, y cualquier fallo se ignora: el login funciona igual, solo que con
+la espera de siempre.
 
 ## 🧪 Pruebas
 

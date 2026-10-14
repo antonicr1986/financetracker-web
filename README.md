@@ -207,6 +207,14 @@ systems listened to the same push independently and Vercel usually finished
 first, so a red pipeline did not stop a release - the checks were reporting on
 code that was already live.
 
+### Azure DevOps
+
+This repository is also copied automatically to Azure Repos
+(`mirror-azure.yml`) and validated there by Azure Pipelines
+(`azure-pipelines.yml`): lint, tests and a production build on Node 22. It only validates; the deploy to Vercel and the rest of the checks stay in GitHub
+Actions. How the whole setup works is explained in the
+[API README](https://github.com/antonicr1986/FinanceTracker#-azure-devops).
+
 ## 🗺️ Roadmap
 
 - Localised validation messages (the ones ASP.NET generates are still English)

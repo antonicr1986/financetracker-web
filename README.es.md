@@ -211,6 +211,14 @@ sistemas escuchaban el mismo push por separado y Vercel solia terminar primero,
 de modo que un pipeline en rojo no impedia publicar: los controles opinaban
 sobre codigo que ya estaba en produccion.
 
+### Azure DevOps
+
+Este repositorio se copia tambien automaticamente a Azure Repos
+(`mirror-azure.yml`) y Azure Pipelines lo valida alli
+(`azure-pipelines.yml`): linter, pruebas y build de produccion con Node 22. Solo valida; el despliegue a Vercel y el resto de controles siguen en GitHub
+Actions. Como funciona todo el montaje se explica en el
+[README de la API](https://github.com/antonicr1986/FinanceTracker/blob/master/README.es.md#-azure-devops).
+
 ## 🗺️ Proximos pasos
 
 - Mensajes de validacion traducidos (los que genera ASP.NET siguen en ingles)

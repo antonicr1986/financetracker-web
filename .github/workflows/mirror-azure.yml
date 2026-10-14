@@ -1,0 +1,21 @@
+name: Mirror to Azure DevOps
+
+on:
+  push:
+    branches: [ '**' ]
+    tags: [ '**' ]
+  delete:
+  workflow_dispatch:
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clonar repo completo (todas las ramas y tags)
+        run: git clone --bare "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" repo.git
+
+      - name: Push espejo a Azure Repos
+        working-directory: repo.git
+        env:
+          AZURE_PAT: ${{ secrets.AZURE_DEVOPS_PAT }}
+        run: git push --mirror "https://antonicr1986:${AZURE_PAT}@dev.azure.com/antonicr1986/FinanceTracker/_git/financetracker-web"

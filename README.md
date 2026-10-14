@@ -27,7 +27,9 @@ Azure SQL and a dashboard computed from it.
 
 There is a **public demo account**. The button on the sign-in screen uses it and
 loads data seeded by the backend, so the app can be explored without
-registering.
+registering. The API runs on Azure's free tier and sleeps when idle: the sign-in
+page wakes it up as soon as it opens, so the wait happens while you read it —
+and if it still runs long, the screen says so.
 
 When no API is configured the interface falls back to sample data rather than
 breaking, which keeps it runnable without a backend.
@@ -149,6 +151,13 @@ neither is set, sample data is used.
 
 `NEXT_PUBLIC_*` is inlined at build time rather than read at startup: changing
 it on Vercel requires a redeploy to take effect.
+
+**Pre-warming.** When the sign-in page opens it fires a request to the API's
+`/health/ready`, which also queries the database, without waiting for the
+answer. On the free tier the app service unloads when idle and Azure SQL
+serverless pauses, so this starts both while the visitor is still reading the
+page. It uses `no-cors` because only the request matters, not the response, and
+any failure is ignored: signing in works the same, just with the usual wait.
 
 ## 🧪 Tests
 

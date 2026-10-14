@@ -254,6 +254,25 @@ async function readServerMessage(response: Response): Promise<string | null> {
   }
 }
 
+/**
+ * Despierta la API y la base de datos sin esperar respuesta.
+ *
+ * En produccion la API corre en el plan gratuito de App Service, que se
+ * descarga tras un rato sin uso, y Azure SQL serverless se pausa a la hora.
+ * Llamar a /health/ready (que consulta la base de datos) en cuanto se abre el
+ * login hace que ambos arranquen mientras la persona lee la pantalla, en vez
+ * de cuando pulsa "Entrar".
+ *
+ * "no-cors" porque solo interesa que la peticion llegue: la respuesta no se
+ * lee, asi que no hace falta que el endpoint de salud tenga CORS. Cualquier
+ * fallo se ignora; el login sigue funcionando igual.
+ */
+export function warmUpApi(): void {
+  const baseUrl = getApiUrl();
+  if (!baseUrl) return;
+  fetch(`${baseUrl}/health/ready`, { mode: "no-cors", cache: "no-store" }).catch(() => {});
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const baseUrl = getApiUrl();
 

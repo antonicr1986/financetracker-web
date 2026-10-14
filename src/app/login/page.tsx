@@ -8,6 +8,7 @@ import {
   setToken,
   setUser,
   clearSessionExpired,
+  warmUpApi,
 } from "@/lib/api/client";
 import { getAndClearReturnUrl } from "@/lib/useSessionGuard";
 import { useMockMode } from "@/lib/useMockMode";
@@ -32,6 +33,14 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSlow, setIsSlow] = useState(false);
+
+  // Precalentamiento: al abrir el login se despiertan la API y la base de
+  // datos, asi la espera ocurre mientras se lee la pantalla y no al entrar.
+  // En modo demostracion no hay API a la que llamar.
+  useEffect(() => {
+    if (mockMode) return;
+    warmUpApi();
+  }, [mockMode]);
 
   // La base de datos de Azure se pausa tras un rato sin uso y despertarla lleva
   // su tiempo. El backend reintenta solo, pero desde fuera solo se ve un boton

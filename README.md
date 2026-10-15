@@ -200,6 +200,13 @@ a deliberate choice here.
   only starts once secret scanning and the build are green. Vercel's own Git
   deployments are switched off, so nothing reaches production without clearing
   the checks first.
+- **DAST**: after every deployment, **OWASP ZAP** scans the published site
+  (passive baseline mode): security headers, cookies, exposed information...
+  The report is kept as a run artifact (`zap-report`) rather than an issue,
+  because the repository is public.
+- **Tight workflows**: the `GITHUB_TOKEN` is read-only by default, every job has
+  a time limit and only one production deployment runs at a time
+  (`concurrency`).
 
 Wiring the deploy into the pipeline costs something: pull requests no longer
 get automatic preview URLs from Vercel. That was worth trading. Before, the two

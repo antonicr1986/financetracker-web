@@ -204,6 +204,13 @@ porque los dialogos nativos son aqui una decision deliberada.
   que solo arranca cuando el escaneo de secretos y la compilacion estan en
   verde. El despliegue automatico de Vercel esta desactivado, asi que nada llega
   a produccion sin pasar antes por los controles.
+- **DAST**: tras cada despliegue, **OWASP ZAP** analiza la web ya publicada
+  (modo baseline, pasivo): cabeceras de seguridad, cookies, informacion
+  expuesta... El informe queda como artefacto de la ejecucion (`zap-report`) y
+  no como issue, porque el repositorio es publico.
+- **Workflows acotados**: el `GITHUB_TOKEN` es de solo lectura por defecto, cada
+  job tiene un tiempo maximo y solo hay un despliegue a produccion a la vez
+  (`concurrency`).
 
 Meter el despliegue dentro del pipeline tiene un coste: las pull requests ya no
 reciben URL de vista previa automatica de Vercel. Compensa. Antes, los dos

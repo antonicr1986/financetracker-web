@@ -204,10 +204,17 @@ porque los dialogos nativos son aqui una decision deliberada.
   que solo arranca cuando el escaneo de secretos y la compilacion estan en
   verde. El despliegue automatico de Vercel esta desactivado, asi que nada llega
   a produccion sin pasar antes por los controles.
+- **Cabeceras de seguridad** en `next.config.ts`: Content-Security-Policy,
+  `X-Frame-Options` (anti-clickjacking), `X-Content-Type-Options`,
+  `Referrer-Policy`, `Permissions-Policy` y `Cross-Origin-Opener-Policy`. La CSP
+  bloquea scripts de otros dominios y que la web se cargue dentro de un iframe.
 - **DAST**: tras cada despliegue, **OWASP ZAP** analiza la web ya publicada
-  (modo baseline, pasivo): cabeceras de seguridad, cookies, informacion
-  expuesta... El informe queda como artefacto de la ejecucion (`zap-report`) y
-  no como issue, porque el repositorio es publico.
+  (modo baseline, pasivo) y **el pipeline falla si aparece una alerta nueva**.
+  Los riesgos aceptados (la CSP admite scripts inline por como funciona
+  Next.js, el CORS que Vercel pone en los estaticos...) estan en
+  `.zap/rules.tsv` como informativos, cada uno con su motivo. El informe queda
+  como artefacto de la ejecucion (`zap-report`) y no como issue, porque el
+  repositorio es publico.
 - **Workflows acotados**: el `GITHUB_TOKEN` es de solo lectura por defecto, cada
   job tiene un tiempo maximo y solo hay un despliegue a produccion a la vez
   (`concurrency`).

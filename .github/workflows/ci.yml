@@ -123,9 +123,9 @@ jobs:
   # con OWASP ZAP en modo baseline (pasivo, no destructivo): cabeceras de
   # seguridad que faltan (CSP, HSTS...), cookies inseguras, informacion
   # expuesta... Recorre las paginas reales de la web, no solo la portada.
-  #  - fail_action: false de momento, para ver que encuentra sin bloquear.
-  #    Cuando este limpio, se pasa a true y se ignoran los falsos positivos
-  #    en .zap/rules.tsv.
+  #  - fail_action: true: cualquier alerta nueva pone el pipeline en rojo. Los
+  #    riesgos aceptados estan en .zap/rules.tsv como INFO (salen en el
+  #    informe pero no fallan), cada uno con su motivo.
   #  - allow_issue_writing: false porque el repo es publico: el informe NO se
   #    publica como issue (seria una lista de debilidades a la vista de todos),
   #    solo como artefacto de la ejecucion (zap-report).
@@ -141,6 +141,7 @@ jobs:
         uses: zaproxy/action-baseline@v0.15.0
         with:
           target: https://financetracker-web-tau.vercel.app
-          fail_action: false
+          rules_file_name: '.zap/rules.tsv'
+          fail_action: true
           allow_issue_writing: false
           artifact_name: zap-report

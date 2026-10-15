@@ -13,7 +13,7 @@ con `[x]` y se anota la fecha o el commit.
     `Cross-Origin-Embedder-Policy` (`require-corp` puede romper recursos y aporta poco aquí).
     Documentarlos en `.zap/rules.tsv` al pasar `fail_action` a `true`.
 - [ ] Endurecer la CSP con un nonce por petición (middleware) para quitar `'unsafe-inline'` de `script-src`.
-- [ ] Pasar `fail_action` a `true` cuando el informe salga limpio (falsos positivos en `.zap/rules.tsv`).
+- [x] `fail_action: true` con los riesgos aceptados documentados como INFO en `.zap/rules.tsv`.
 
 ## Despliegue
 

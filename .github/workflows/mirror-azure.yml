@@ -7,9 +7,15 @@ on:
   delete:
   workflow_dispatch:
 
+# Permisos minimos por defecto para el GITHUB_TOKEN: solo lectura del
+# codigo. Un job que necesite mas lo declara el mismo, solo para el.
+permissions:
+  contents: read
+
 jobs:
   mirror:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Clonar repo completo (todas las ramas y tags)
         run: git clone --bare "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" repo.git

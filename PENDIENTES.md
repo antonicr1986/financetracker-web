@@ -5,11 +5,14 @@ con `[x]` y se anota la fecha o el commit.
 
 ## DAST (OWASP ZAP)
 
-- [ ] Revisar el primer `zap-report` (artefacto del job `dast`).
-- [ ] **Cabeceras de seguridad** en `next.config.ts` (`headers()`): `X-Content-Type-Options`,
-  `X-Frame-Options` / `frame-ancestors`, `Referrer-Policy`, `Permissions-Policy` y una
-  `Content-Security-Policy` (probarla primero con `Content-Security-Policy-Report-Only`
-  para no romper la web). HSTS ya lo pone Vercel.
+- [x] Revisar el primer `zap-report` (octubre de 2026): 0 High, 3 Medium, 4 Low.
+- [x] **Cabeceras de seguridad** en `next.config.ts`: CSP, `X-Frame-Options`, `X-Content-Type-Options`,
+  `Referrer-Policy`, `Permissions-Policy` y `Cross-Origin-Opener-Policy`. Probada en un navegador
+  sin violaciones de CSP en ninguna página.
+  - Riesgos aceptados: `Access-Control-Allow-Origin: *` (lo pone Vercel en los estáticos públicos) y
+    `Cross-Origin-Embedder-Policy` (`require-corp` puede romper recursos y aporta poco aquí).
+    Documentarlos en `.zap/rules.tsv` al pasar `fail_action` a `true`.
+- [ ] Endurecer la CSP con un nonce por petición (middleware) para quitar `'unsafe-inline'` de `script-src`.
 - [ ] Pasar `fail_action` a `true` cuando el informe salga limpio (falsos positivos en `.zap/rules.tsv`).
 
 ## Despliegue
@@ -19,9 +22,9 @@ con `[x]` y se anota la fecha o el commit.
 
 ## Repositorio y pipeline
 
-- [ ] **SAST con CodeQL** (Settings → Code security → CodeQL, Default setup).
-- [ ] Dependabot alerts + security updates, y secret scanning con push protection.
-- [ ] Branch protection en `main` (PR obligatoria, checks en verde, sin force push).
+- [x] **SAST con CodeQL** (Settings → Code security → CodeQL, Default setup).
+- [x] Dependabot alerts + security updates, y secret scanning con push protection.
+- [x] Ruleset `proteger-main`: sin borrado ni force push en `main` (sin PR obligatoria: se trabaja con push directo).
 - [ ] Fijar las actions por SHA y añadir `.github/dependabot.yml` con `github-actions`.
 - [ ] Verificar el checksum de gitleaks al descargarlo.
 - [ ] `SECURITY.md` con cómo reportar vulnerabilidades.

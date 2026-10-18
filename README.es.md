@@ -204,12 +204,34 @@ porque los dialogos nativos son aqui una decision deliberada.
   que solo arranca cuando el escaneo de secretos y la compilacion estan en
   verde. El despliegue automatico de Vercel esta desactivado, asi que nada llega
   a produccion sin pasar antes por los controles.
+- **Cabeceras de seguridad** en `next.config.ts`: Content-Security-Policy,
+  `X-Frame-Options` (anti-clickjacking), `X-Content-Type-Options`,
+  `Referrer-Policy`, `Permissions-Policy` y `Cross-Origin-Opener-Policy`. La CSP
+  bloquea scripts de otros dominios y que la web se cargue dentro de un iframe.
+- **DAST**: tras cada despliegue, **OWASP ZAP** analiza la web ya publicada
+  (modo baseline, pasivo) y **el pipeline falla si aparece una alerta nueva**.
+  Los riesgos aceptados (la CSP admite scripts inline por como funciona
+  Next.js, el CORS que Vercel pone en los estaticos...) estan en
+  `.zap/rules.tsv` como informativos, cada uno con su motivo. El informe queda
+  como artefacto de la ejecucion (`zap-report`) y no como issue, porque el
+  repositorio es publico.
+- **Workflows acotados**: el `GITHUB_TOKEN` es de solo lectura por defecto, cada
+  job tiene un tiempo maximo y solo hay un despliegue a produccion a la vez
+  (`concurrency`).
 
 Meter el despliegue dentro del pipeline tiene un coste: las pull requests ya no
 reciben URL de vista previa automatica de Vercel. Compensa. Antes, los dos
 sistemas escuchaban el mismo push por separado y Vercel solia terminar primero,
 de modo que un pipeline en rojo no impedia publicar: los controles opinaban
 sobre codigo que ya estaba en produccion.
+
+### Azure DevOps
+
+Este repositorio se copia tambien automaticamente a Azure Repos
+(`mirror-azure.yml`) y Azure Pipelines lo valida alli
+(`azure-pipelines.yml`): linter, pruebas y build de produccion con Node 22. Solo valida; el despliegue a Vercel y el resto de controles siguen en GitHub
+Actions. Como funciona todo el montaje se explica en el
+[README de la API](https://github.com/antonicr1986/FinanceTracker/blob/master/README.es.md#-azure-devops).
 
 ## 🗺️ Proximos pasos
 

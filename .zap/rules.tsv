@@ -1,0 +1,7 @@
+10055	INFO	(CSP unsafe-inline y connect-src https: riesgo aceptado: scripts inline de Next.js y URL de API configurable. Ver next.config.ts y PENDIENTES.md)
+10098	INFO	(Access-Control-Allow-Origin *: lo pone Vercel en los estaticos publicos, sin datos privados detras)
+90004	INFO	(Cross-Origin-Embedder-Policy: require-corp puede romper recursos y aporta poco aqui. COOP si esta puesta)
+10109	INFO	(Modern Web Application: informativo)
+10015	INFO	(Re-examine Cache-control Directives: informativo, cache de Vercel)
+10050	INFO	(Retrieved from Cache: informativo, CDN de Vercel)
+10049	INFO	(Storable and Cacheable Content: estaticos publicos, cachearlos es lo correcto)

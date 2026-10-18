@@ -11,10 +11,16 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Permisos minimos por defecto para el GITHUB_TOKEN: solo lectura del
+# codigo. Un job que necesite mas lo declara el mismo, solo para el.
+permissions:
+  contents: read
+
 jobs:
   secrets:
     name: secrets
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
         with:
@@ -37,6 +43,7 @@ jobs:
   build:
     name: build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
 
@@ -73,6 +80,13 @@ jobs:
       (github.event_name == 'push' && github.ref == 'refs/heads/main')
       || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Un solo despliegue a produccion a la vez. Si llegan dos pushes seguidos,
+    # el segundo espera a que termine el primero (no lo cancela: cortar un
+    # despliegue a medias podria dejar la web en un estado inconsistente).
+    concurrency:
+      group: production
+      cancel-in-progress: false
 
     environment:
       name: production
@@ -104,3 +118,32 @@ jobs:
 
       - name: Deploy
         run: vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN
+
+  # DAST: analiza la web ya desplegada desde fuera, como haria un atacante,
+  # con OWASP ZAP en modo baseline (pasivo, no destructivo): cabeceras de
+  # seguridad que faltan (CSP, HSTS...), cookies inseguras, informacion
+  # expuesta... Recorre las paginas reales de la web, no solo la portada.
+  #  - fail_action: true: cualquier alerta nueva pone el pipeline en rojo. Los
+  #    riesgos aceptados estan en .zap/rules.tsv como INFO (salen en el
+  #    informe pero no fallan), cada uno con su motivo.
+  #  - allow_issue_writing: false porque el repo es publico: el informe NO se
+  #    publica como issue (seria una lista de debilidades a la vista de todos),
+  #    solo como artefacto de la ejecucion (zap-report).
+  dast:
+    name: dast
+    needs: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: OWASP ZAP baseline scan
+        uses: zaproxy/action-baseline@v0.15.0
+        with:
+          target: https://financetracker-web-tau.vercel.app
+          # Las reglas se pasan con -c a mano: la action solo usa rules_file_name
+          # si el archivo tiene alguna regla IGNORE, y aqui todas son INFO.
+          cmd_options: '-c .zap/rules.tsv'
+          fail_action: true
+          allow_issue_writing: false
+          artifact_name: zap-report

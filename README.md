@@ -200,12 +200,34 @@ a deliberate choice here.
   only starts once secret scanning and the build are green. Vercel's own Git
   deployments are switched off, so nothing reaches production without clearing
   the checks first.
+- **Security headers** in `next.config.ts`: Content-Security-Policy,
+  `X-Frame-Options` (anti-clickjacking), `X-Content-Type-Options`,
+  `Referrer-Policy`, `Permissions-Policy` and `Cross-Origin-Opener-Policy`. The
+  CSP blocks scripts from other domains and stops the site being framed.
+- **DAST**: after every deployment, **OWASP ZAP** scans the published site
+  (passive baseline mode) and **the pipeline fails if a new alert shows up**.
+  Accepted risks (the CSP allows inline scripts because of how Next.js works,
+  the CORS header Vercel adds to static files...) are listed in
+  `.zap/rules.tsv` as informational, each with its reason. The report is kept
+  as a run artifact (`zap-report`) rather than an issue, because the
+  repository is public.
+- **Tight workflows**: the `GITHUB_TOKEN` is read-only by default, every job has
+  a time limit and only one production deployment runs at a time
+  (`concurrency`).
 
 Wiring the deploy into the pipeline costs something: pull requests no longer
 get automatic preview URLs from Vercel. That was worth trading. Before, the two
 systems listened to the same push independently and Vercel usually finished
 first, so a red pipeline did not stop a release - the checks were reporting on
 code that was already live.
+
+### Azure DevOps
+
+This repository is also copied automatically to Azure Repos
+(`mirror-azure.yml`) and validated there by Azure Pipelines
+(`azure-pipelines.yml`): lint, tests and a production build on Node 22. It only validates; the deploy to Vercel and the rest of the checks stay in GitHub
+Actions. How the whole setup works is explained in the
+[API README](https://github.com/antonicr1986/FinanceTracker#-azure-devops).
 
 ## 🗺️ Roadmap
 

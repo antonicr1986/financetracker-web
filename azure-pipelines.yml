@@ -1,0 +1,31 @@
+# CI de FinanceTracker Web (Next.js 16) en Azure Pipelines
+# Solo valida el código: el despliegue a Vercel lo hace GitHub Actions.
+
+trigger:
+  branches:
+    include: [ main ]
+
+pr:
+  branches:
+    include: [ main ]
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+  - task: NodeTool@0
+    inputs:
+      versionSpec: '22.x'
+    displayName: Instalar Node 22
+
+  - script: npm ci
+    displayName: Instalar dependencias
+
+  - script: npm run lint
+    displayName: Lint (ESLint)
+
+  - script: npx vitest run
+    displayName: Tests (Vitest)
+
+  - script: npm run build
+    displayName: Build de producción

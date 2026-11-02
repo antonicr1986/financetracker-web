@@ -2,7 +2,10 @@ name: Mirror to Azure DevOps
 
 on:
   push:
-    branches: [ '**' ]
+    # Las ramas de Dependabot no se espejan: sus ejecuciones no tienen acceso
+    # a los secrets de Actions (el PAT llega vacio y el push falla). Cuando su
+    # PR se fusiona a main, el mirror de main ya lleva el cambio a Azure.
+    branches-ignore: [ 'dependabot/**' ]
     tags: [ '**' ]
   delete:
   workflow_dispatch:
@@ -14,6 +17,9 @@ permissions:
 
 jobs:
   mirror:
+    # Segunda proteccion: cubre tambien el evento delete (cuando Dependabot
+    # borra su rama al fusionar o cerrar el PR), que no admite filtros de rama.
+    if: github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

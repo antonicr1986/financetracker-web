@@ -18,8 +18,10 @@ const isDev = process.env.NODE_ENV !== "production";
  */
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval' https://va.vercel-scripts.com" : ""}`,
-  "style-src 'self' 'unsafe-inline'",
+  `script-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/client${isDev ? " 'unsafe-eval' https://va.vercel-scripts.com" : ""}`,
+  "style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style",
+  // El boton y la ventana de "Continuar con Google" se cargan en un iframe suyo.
+  "frame-src https://accounts.google.com/gsi/",
   "img-src 'self' data: blob:",
   "font-src 'self'",
   "connect-src 'self' https: http://localhost:* http://127.0.0.1:*",
@@ -40,7 +42,9 @@ const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=(), usb=()" },
-  { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+  // same-origin-allow-popups y no same-origin: la ventana de Google tiene que
+  // poder devolver la cuenta elegida a esta pagina.
+  { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
 ];
 
 const nextConfig: NextConfig = {

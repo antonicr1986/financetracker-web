@@ -542,3 +542,18 @@ export async function login(
     body: JSON.stringify({ email, password }),
   });
 }
+
+/**
+ * Inicio de sesion con Google: el ID token que devuelve Google al elegir la
+ * cuenta se valida en la API, que responde igual que el login normal. El
+ * idioma sirve para las categorias de partida si la cuenta se crea ahora.
+ */
+export async function googleLogin(
+  idToken: string,
+  language: Locale,
+): Promise<LoginResponseDto> {
+  return request<LoginResponseDto>("/api/Users/google", {
+    method: "POST",
+    body: JSON.stringify({ idToken, language }),
+  });
+}

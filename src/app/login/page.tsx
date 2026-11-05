@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import {
+  googleLogin,
   login,
   setToken,
   setUser,
@@ -12,9 +13,10 @@ import {
 } from "@/lib/api/client";
 import { getAndClearReturnUrl } from "@/lib/useSessionGuard";
 import { useMockMode } from "@/lib/useMockMode";
-import { useT } from "@/lib/i18n/useT";
+import { useLocale, useT } from "@/lib/i18n/useT";
 import { useApiErrorMessage } from "@/lib/i18n/useApiError";
 import SessionExpiredBanner from "@/components/SessionExpiredBanner";
+import GoogleSignInButton from "@/components/GoogleSignInButton";
 import Link from "next/link";
 
 // Cuenta publica de solo lectura sembrada por el backend (DemoDataSeeder),
@@ -26,6 +28,7 @@ export default function LoginPage() {
   const router = useRouter();
   const mockMode = useMockMode();
   const t = useT();
+  const locale = useLocale();
   const describeError = useApiErrorMessage();
 
   const [email, setEmail] = useState("");
@@ -63,21 +66,39 @@ export default function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      const response = await login(emailToUse, passwordToUse);
-      setToken(response.token);
-      setUser(response.user ?? null);
-      // El aviso de sesion caducada ya ha cumplido: se borra al entrar.
-      clearSessionExpired();
-      
-      // Si hay una URL guardada (porque la sesión expiró), volver allí
-      // Si no, ir a la página principal
-      const returnUrl = getAndClearReturnUrl();
-      router.push(returnUrl || "/");
+      enterWith(await login(emailToUse, passwordToUse));
     } catch (cause: unknown) {
       setError(describeError(cause, "errors.signInFailed"));
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  // Google ya ha verificado la cuenta; la API valida el token y abre la sesion.
+  async function signInWithGoogle(idToken: string) {
+    setError(null);
+    setIsSlow(false);
+    setIsSubmitting(true);
+
+    try {
+      enterWith(await googleLogin(idToken, locale));
+    } catch (cause: unknown) {
+      setError(describeError(cause, "errors.signInFailed"));
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  function enterWith(response: Awaited<ReturnType<typeof login>>) {
+    setToken(response.token);
+    setUser(response.user ?? null);
+    // El aviso de sesion caducada ya ha cumplido: se borra al entrar.
+    clearSessionExpired();
+
+    // Si hay una URL guardada (porque la sesión expiró), volver allí
+    // Si no, ir a la página principal
+    const returnUrl = getAndClearReturnUrl();
+    router.push(returnUrl || "/");
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -200,6 +221,11 @@ export default function LoginPage() {
           >
             {t("login.demo")}
           </button>
+
+          {/* Sin API no hay quien valide el token de Google. */}
+          {!mockMode && (
+            <GoogleSignInButton locale={locale} onCredential={signInWithGoogle} />
+          )}
 
           <p className="mt-2 text-center text-xs text-slate-400 dark:text-slate-500">
             {DEMO_EMAIL} / {DEMO_PASSWORD}

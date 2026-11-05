@@ -9,6 +9,7 @@ import {
   getToken,
   getTransactions,
   getUser,
+  googleLogin,
   isUsingMockData,
   login,
   register,
@@ -251,6 +252,29 @@ describe("errors", () => {
 
     expect(error.serverCode).toBe("invalid_credentials");
     expect(error.message).toBe("invalid_credentials");
+    expect(wasSessionExpired()).toBe(false);
+  });
+
+  it("posts the Google ID token and language to /api/Users/google", async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse({ token: "jwt", expiration: "2026-11-05T12:00:00Z", user: { id: 7, name: "María", email: "maria@gmail.com" } }),
+    );
+
+    const response = await googleLogin("google-id-token", "en");
+
+    const { url, init } = lastCall();
+    expect(url).toBe(`${API}/api/Users/google`);
+    expect(init.method).toBe("POST");
+    expect(JSON.parse(init.body as string)).toEqual({ idToken: "google-id-token", language: "en" });
+    expect(response.token).toBe("jwt");
+  });
+
+  it("reports a rejected Google sign-in as invalid_google_token, not as an expired session", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ code: "invalid_google_token" }, 401));
+
+    const error = await errorOf(googleLogin("token-no-valido", "es"));
+
+    expect(error.serverCode).toBe("invalid_google_token");
     expect(wasSessionExpired()).toBe(false);
   });
 

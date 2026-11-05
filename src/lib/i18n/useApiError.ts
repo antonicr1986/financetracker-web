@@ -9,6 +9,7 @@ import type { MessageKey } from "./messages";
 const SERVER_CODES = new Set([
   "email_already_exists",
   "invalid_credentials",
+  "invalid_google_token",
   "category_not_found",
   "category_type_mismatch",
   "category_has_transactions",

@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
@@ -45,9 +45,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
           cache: npm
@@ -96,15 +96,20 @@ jobs:
       VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
           cache: npm
 
+      # Version fijada: esta herramienta maneja VERCEL_TOKEN, asi que no se
+      # instala "lo ultimo que haya hoy". Se actualiza a mano, revisando el
+      # changelog, cambiando VERCEL_CLI_VERSION.
       - name: Install the Vercel CLI
-        run: npm install --global vercel@latest
+        env:
+          VERCEL_CLI_VERSION: 65.15.0
+        run: npm install --global "vercel@${VERCEL_CLI_VERSION}"
 
       # Enlazar por nombre evita depender de identificadores copiados a mano.
       - name: Link the Vercel project
@@ -135,10 +140,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: OWASP ZAP baseline scan
-        uses: zaproxy/action-baseline@v0.15.0
+        uses: zaproxy/action-baseline@de8ad967d3548d44ef623df22cf95c3b0baf8b25 # v0.15.0
         with:
           target: https://financetracker-web-tau.vercel.app
           # Las reglas se pasan con -c a mano: la action solo usa rules_file_name

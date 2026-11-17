@@ -31,14 +31,14 @@ export default function RegisterPage() {
     setError(null);
 
     // Las reglas son las del backend (RegisterUserDto): nombre obligatorio,
-    // correo valido y contrasena de al menos 6 caracteres. Se comprueban aqui
+    // correo valido y contrasena de al menos 12 caracteres. Se comprueban aqui
     // para no gastar una ida y vuelta en un error evidente.
     if (!name.trim() || !email.trim() || !password) {
       setError(t("errors.fillAll"));
       return;
     }
 
-    if (password.length < 6) {
+    if (password.length < 12) {
       setError(t("errors.passwordTooShort"));
       return;
     }

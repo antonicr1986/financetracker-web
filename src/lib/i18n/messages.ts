@@ -211,6 +211,8 @@ export const es = {
   "apiError.category_type_mismatch": "La categoría seleccionada no es del mismo tipo que el movimiento.",
   "apiError.category_has_transactions": "No se puede eliminar la categoría porque tiene movimientos asociados.",
   "apiError.demo_read_only": "La cuenta de demostración es de solo lectura.",
+  "apiError.too_many_requests": "Demasiados intentos. Espera un minuto y vuelve a probar.",
+  "apiError.password_breached": "Esta contraseña aparece en filtraciones de datos conocidas. Elige otra.",
 };
 
 export type MessageKey = keyof typeof es;
@@ -421,6 +423,8 @@ export const en: Record<MessageKey, string> = {
   "apiError.category_type_mismatch": "The selected category is not the same type as the transaction.",
   "apiError.category_has_transactions": "The category cannot be deleted because it has transactions.",
   "apiError.demo_read_only": "The demo account is read-only.",
+  "apiError.too_many_requests": "Too many attempts. Wait a minute and try again.",
+  "apiError.password_breached": "This password has appeared in known data breaches. Choose a different one.",
 };
 
 export const dictionaries: Record<"es" | "en", Record<MessageKey, string>> = {

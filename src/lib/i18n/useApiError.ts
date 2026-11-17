@@ -14,6 +14,8 @@ const SERVER_CODES = new Set([
   "category_type_mismatch",
   "category_has_transactions",
   "demo_read_only",
+  "too_many_requests",
+  "password_breached",
 ]);
 
 /**

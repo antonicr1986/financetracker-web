@@ -19,6 +19,22 @@ describe("useApiErrorMessage", () => {
     );
   });
 
+  it("translates the rate limit sent by the API", () => {
+    setLocale("es");
+
+    expect(messageFor(new ApiError("network_error", 429, "too_many_requests"))).toBe(
+      es["apiError.too_many_requests"],
+    );
+  });
+
+  it("translates a breached password rejected by the API", () => {
+    setLocale("en");
+
+    expect(messageFor(new ApiError("invalid_request", 400, "password_breached"))).toBe(
+      en["apiError.password_breached"],
+    );
+  });
+
   it("uses the generic client code when the API code is unknown", () => {
     setLocale("es");
 

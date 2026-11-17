@@ -10,6 +10,8 @@ import {
   getTransactions,
   getUser,
   googleLogin,
+  isMfaChallenge,
+  verifyMfa,
   isUsingMockData,
   login,
   register,
@@ -20,7 +22,7 @@ import {
   wasSessionExpired,
 } from "./client";
 import { mockTransactions } from "@/lib/mock";
-import type { TransactionDto } from "@/lib/types";
+import type { LoginResponseDto, TransactionDto } from "@/lib/types";
 
 const API = "https://api.example.test";
 
@@ -260,12 +262,36 @@ describe("errors", () => {
       jsonResponse({ token: "jwt", expiration: "2026-11-05T12:00:00Z", user: { id: 7, name: "María", email: "maria@gmail.com" } }),
     );
 
-    const response = await googleLogin("google-id-token", "en");
+    const response = (await googleLogin("google-id-token", "en")) as LoginResponseDto;
 
     const { url, init } = lastCall();
     expect(url).toBe(`${API}/api/Users/google`);
     expect(init.method).toBe("POST");
     expect(JSON.parse(init.body as string)).toEqual({ idToken: "google-id-token", language: "en" });
+    expect(response.token).toBe("jwt");
+  });
+
+  it("recognises the two-step verification challenge instead of a session", async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse({ mfaRequired: true, mfaToken: "mfa-token", expiration: "2026-11-05T12:05:00Z" }),
+    );
+
+    const response = await login("ana@example.test", "una-clave-larga");
+
+    expect(isMfaChallenge(response)).toBe(true);
+  });
+
+  it("posts the MFA token and code to /api/users/mfa/verify", async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse({ token: "jwt", expiration: "2026-11-05T12:00:00Z", user: { id: 7, name: "Ana", email: "ana@example.test" } }),
+    );
+
+    const response = await verifyMfa("mfa-token", "123456");
+
+    const { url, init } = lastCall();
+    expect(url).toBe(`${API}/api/users/mfa/verify`);
+    expect(JSON.parse(init.body as string)).toEqual({ mfaToken: "mfa-token", code: "123456" });
+    expect(isMfaChallenge(response)).toBe(false);
     expect(response.token).toBe("jwt");
   });
 
@@ -365,7 +391,7 @@ describe("mock mode (no API configured)", () => {
   });
 
   it("signs in with a demo token", async () => {
-    const response = await login("demo@example.test", "x");
+    const response = (await login("demo@example.test", "x")) as LoginResponseDto;
 
     expect(response.token).toBe("mock-token");
     expect(response.user.email).toBe("demo@example.test");

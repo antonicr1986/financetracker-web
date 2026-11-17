@@ -43,6 +43,8 @@ export interface UserDto {
   id: number;
   name: string;
   email: string;
+  /** Opcional: las sesiones guardadas antes de existir el MFA no lo traen. */
+  mfaEnabled?: boolean;
 }
 
 /** Respuesta de POST /api/Users/login. */
@@ -50,6 +52,30 @@ export interface LoginResponseDto {
   token: string;
   expiration: string;
   user: UserDto;
+}
+
+/**
+ * Lo que responde el login cuando la contraseña es correcta pero la cuenta
+ * tiene MFA: no hay sesion todavia, solo un token temporal para enviar el
+ * codigo a POST /api/users/mfa/verify.
+ */
+export interface MfaChallengeDto {
+  mfaRequired: true;
+  mfaToken: string;
+  expiration: string;
+}
+
+export type SignInResponse = LoginResponseDto | MfaChallengeDto;
+
+/** POST /api/users/mfa/setup. */
+export interface MfaSetupDto {
+  secret: string;
+  otpAuthUri: string;
+}
+
+/** POST /api/users/mfa/confirm: se muestran una sola vez. */
+export interface MfaRecoveryCodesDto {
+  recoveryCodes: string[];
 }
 
 /**

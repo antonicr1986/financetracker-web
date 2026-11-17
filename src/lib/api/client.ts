@@ -4,7 +4,11 @@ import type {
   CategoryDto,
   TransactionInput,
   LoginResponseDto,
+  MfaChallengeDto,
+  MfaRecoveryCodesDto,
+  MfaSetupDto,
   PagedResult,
+  SignInResponse,
   TransactionDto,
   TransactionType,
   UserDto,
@@ -526,7 +530,7 @@ export async function register(
 export async function login(
   email: string,
   password: string,
-): Promise<LoginResponseDto> {
+): Promise<SignInResponse> {
   if (isUsingMockData()) {
     await delay(500);
     return {
@@ -536,8 +540,9 @@ export async function login(
     };
   }
 
-  // Real endpoint: POST /api/Users/login -> { token, expiration, user }
-  return request<LoginResponseDto>("/api/Users/login", {
+  // POST /api/Users/login -> { token, expiration, user }, o bien
+  // { mfaRequired, mfaToken } si la cuenta tiene verificacion en dos pasos.
+  return request<SignInResponse>("/api/Users/login", {
     method: "POST",
     body: JSON.stringify({ email, password }),
   });
@@ -545,15 +550,49 @@ export async function login(
 
 /**
  * Inicio de sesion con Google: el ID token que devuelve Google al elegir la
- * cuenta se valida en la API, que responde igual que el login normal. El
+ * cuenta se valida en la API, que responde igual que el login normal (tambien
+ * con el segundo paso si la cuenta tiene MFA). El
  * idioma sirve para las categorias de partida si la cuenta se crea ahora.
  */
 export async function googleLogin(
   idToken: string,
   language: Locale,
-): Promise<LoginResponseDto> {
-  return request<LoginResponseDto>("/api/Users/google", {
+): Promise<SignInResponse> {
+  return request<SignInResponse>("/api/Users/google", {
     method: "POST",
     body: JSON.stringify({ idToken, language }),
+  });
+}
+
+/** true si el login pide el segundo paso en lugar de abrir la sesion. */
+export function isMfaChallenge(response: SignInResponse): response is MfaChallengeDto {
+  return "mfaRequired" in response && response.mfaRequired === true;
+}
+
+/** Segundo paso del login: codigo de la app autenticadora o de recuperacion. */
+export async function verifyMfa(mfaToken: string, code: string): Promise<LoginResponseDto> {
+  return request<LoginResponseDto>("/api/users/mfa/verify", {
+    method: "POST",
+    body: JSON.stringify({ mfaToken, code }),
+  });
+}
+
+/** Genera el secreto (aun sin activar) y el enlace para el QR. */
+export async function setupMfa(): Promise<MfaSetupDto> {
+  return request<MfaSetupDto>("/api/users/mfa/setup", { method: "POST" });
+}
+
+/** Activa el MFA con el primer codigo y devuelve los codigos de recuperacion. */
+export async function confirmMfa(code: string): Promise<MfaRecoveryCodesDto> {
+  return request<MfaRecoveryCodesDto>("/api/users/mfa/confirm", {
+    method: "POST",
+    body: JSON.stringify({ code }),
+  });
+}
+
+export async function disableMfa(code: string): Promise<void> {
+  await request<void>("/api/users/mfa/disable", {
+    method: "POST",
+    body: JSON.stringify({ code }),
   });
 }

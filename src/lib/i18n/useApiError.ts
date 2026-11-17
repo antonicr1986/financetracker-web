@@ -16,6 +16,12 @@ const SERVER_CODES = new Set([
   "demo_read_only",
   "too_many_requests",
   "password_breached",
+  "invalid_mfa_code",
+  "invalid_mfa_token",
+  "mfa_not_available",
+  "mfa_already_enabled",
+  "mfa_not_enabled",
+  "mfa_setup_not_started",
 ]);
 
 /**

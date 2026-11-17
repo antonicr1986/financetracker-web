@@ -4,8 +4,11 @@ import { Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import {
+  ApiError,
   googleLogin,
+  isMfaChallenge,
   login,
+  verifyMfa,
   setToken,
   setUser,
   clearSessionExpired,
@@ -17,6 +20,8 @@ import { useLocale, useT } from "@/lib/i18n/useT";
 import { useApiErrorMessage } from "@/lib/i18n/useApiError";
 import SessionExpiredBanner from "@/components/SessionExpiredBanner";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
+import MfaLoginStep from "@/components/MfaLoginStep";
+import type { LoginResponseDto, SignInResponse } from "@/lib/types";
 import Link from "next/link";
 
 // Cuenta publica de solo lectura sembrada por el backend (DemoDataSeeder),
@@ -36,6 +41,8 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSlow, setIsSlow] = useState(false);
+  // Con valor, la contraseña ya es correcta y se esta pidiendo el codigo del MFA.
+  const [mfaToken, setMfaToken] = useState<string | null>(null);
 
   // Precalentamiento: al abrir el login se despiertan la API y la base de
   // datos, asi la espera ocurre mientras se lee la pantalla y no al entrar.
@@ -66,7 +73,7 @@ export default function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      enterWith(await login(emailToUse, passwordToUse));
+      handleSignIn(await login(emailToUse, passwordToUse));
     } catch (cause: unknown) {
       setError(describeError(cause, "errors.signInFailed"));
     } finally {
@@ -81,7 +88,7 @@ export default function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      enterWith(await googleLogin(idToken, locale));
+      handleSignIn(await googleLogin(idToken, locale));
     } catch (cause: unknown) {
       setError(describeError(cause, "errors.signInFailed"));
     } finally {
@@ -89,7 +96,42 @@ export default function LoginPage() {
     }
   }
 
-  function enterWith(response: Awaited<ReturnType<typeof login>>) {
+  // Con MFA el login no abre la sesion: pasa a la pantalla del codigo.
+  function handleSignIn(response: SignInResponse) {
+    if (isMfaChallenge(response)) {
+      setMfaToken(response.mfaToken);
+      return;
+    }
+
+    enterWith(response);
+  }
+
+  async function verifyCode(code: string) {
+    if (!mfaToken) return;
+
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      enterWith(await verifyMfa(mfaToken, code));
+    } catch (cause: unknown) {
+      // El token del segundo paso dura 5 minutos: si ha caducado, se vuelve
+      // a pedir la contraseña.
+      if (cause instanceof ApiError && cause.serverCode === "invalid_mfa_token") {
+        setMfaToken(null);
+      }
+      setError(describeError(cause, "errors.signInFailed"));
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  function backToPassword() {
+    setMfaToken(null);
+    setError(null);
+  }
+
+  function enterWith(response: LoginResponseDto) {
     setToken(response.token);
     setUser(response.user ?? null);
     // El aviso de sesion caducada ya ha cumplido: se borra al entrar.
@@ -129,6 +171,14 @@ export default function LoginPage() {
           <SessionExpiredBanner />
         </Suspense>
 
+        {mfaToken !== null ? (
+          <MfaLoginStep
+            isSubmitting={isSubmitting}
+            error={error}
+            onVerify={verifyCode}
+            onBack={backToPassword}
+          />
+        ) : (
         <form
           onSubmit={handleSubmit}
           className="mt-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900"
@@ -231,6 +281,7 @@ export default function LoginPage() {
             {DEMO_EMAIL} / {DEMO_PASSWORD}
           </p>
         </form>
+        )}
 
         <p className="mt-4 text-center text-sm text-slate-500 dark:text-slate-400">
           {t("login.noAccount")}{" "}

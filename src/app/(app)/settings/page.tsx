@@ -9,6 +9,8 @@ import {
     setUser,
 } from "@/lib/api/client";
 import { useT } from "@/lib/i18n/useT";
+import { useMockMode } from "@/lib/useMockMode";
+import MfaSection from "@/components/MfaSection";
 
 const STORAGE_KEY = "financetracker.api.url";
 
@@ -44,6 +46,7 @@ export default function SettingsPage() {
     const [isTesting, setIsTesting] = useState(false);
     const [testResult, setTestResult] = useState<string | null>(null);
     const token = getToken();
+    const mockMode = useMockMode();
 
     async function handleSave(e: React.FormEvent) {
         e.preventDefault();
@@ -227,6 +230,9 @@ export default function SettingsPage() {
                             </div>
                         </div>
                     </section>
+
+                    {/* Verificacion en dos pasos: solo con sesion real contra la API. */}
+                    {token && !mockMode && <MfaSection />}
 
                     {/* Logout */}
                     <button

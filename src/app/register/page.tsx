@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { login, register, setToken, setUser } from "@/lib/api/client";
+import { isMfaChallenge, login, register, setToken, setUser } from "@/lib/api/client";
 import { useLocale, useT } from "@/lib/i18n/useT";
 import { useApiErrorMessage } from "@/lib/i18n/useApiError";
 
@@ -57,6 +57,12 @@ export default function RegisterPage() {
       // usuario entra directamente en lugar de tener que escribir lo mismo
       // otra vez en la pantalla de al lado.
       const session = await login(email.trim(), password);
+      // Una cuenta recien creada no tiene MFA; si aun asi lo pidiera, que
+      // entre por la pantalla de acceso, que sabe pedir el codigo.
+      if (isMfaChallenge(session)) {
+        router.push("/login");
+        return;
+      }
       setToken(session.token);
       setUser(session.user ?? null);
       router.push("/");

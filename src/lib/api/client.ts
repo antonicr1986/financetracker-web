@@ -35,12 +35,28 @@ function normaliseApiUrl(value: string | null | undefined): string | null {
 }
 
 /**
- * URL de la API en uso: manda lo que el usuario haya guardado en Configuracion
- * y, si no hay nada, la de por defecto. Si tampoco la hay, devuelve null y la
- * aplicacion tira de datos de ejemplo.
+ * Si se puede apuntar la web a otra API desde Configuracion. Solo fuera de
+ * produccion (npm run dev, tests), para probar contra localhost o AWS.
+ *
+ * En produccion no, por seguridad: con la URL guardada en el navegador,
+ * bastaria convencer a alguien de "configurar" una API ajena para que su
+ * correo, su contraseña y sus codigos del MFA acabaran en ese servidor
+ * creyendo estar en la web oficial. Alli manda siempre NEXT_PUBLIC_API_URL.
+ *
+ * Lee NODE_ENV en cada llamada (y no una vez al cargar) para poder probarlo.
+ */
+export function canConfigureApiUrl(): boolean {
+  return process.env.NODE_ENV !== "production";
+}
+
+/**
+ * URL de la API en uso: en desarrollo manda lo que se haya guardado en
+ * Configuracion y, si no hay nada, la de por defecto. En produccion, siempre
+ * la de por defecto. Si no la hay, devuelve null y la aplicacion tira de
+ * datos de ejemplo.
  */
 export function getApiUrl(): string | null {
-  if (typeof window === "undefined") return DEFAULT_API_URL;
+  if (typeof window === "undefined" || !canConfigureApiUrl()) return DEFAULT_API_URL;
   try {
     return normaliseApiUrl(localStorage.getItem(API_URL_STORAGE_KEY)) ?? DEFAULT_API_URL;
   } catch {

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useSyncExternalStore } from "react";
 import {
+    canConfigureApiUrl,
     getDefaultApiUrl,
     getToken,
     setToken,
@@ -47,6 +48,9 @@ export default function SettingsPage() {
     const [testResult, setTestResult] = useState<string | null>(null);
     const token = getToken();
     const mockMode = useMockMode();
+    // Conexion a la API y Estado son herramientas de desarrollo: en produccion
+    // no existen (ver canConfigureApiUrl) y aqui solo queda la seguridad.
+    const showApiSettings = canConfigureApiUrl();
 
     async function handleSave(e: React.FormEvent) {
         e.preventDefault();
@@ -123,11 +127,12 @@ export default function SettingsPage() {
                         {t("settings.title")}
                     </h1>
                     <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                        {t("settings.subtitle")}
+                        {t(showApiSettings ? "settings.subtitle" : "settings.subtitleAccount")}
                     </p>
                 </header>
 
                 <div className="space-y-6">
+                    {showApiSettings && (<>
                     {/* API Configuration */}
                     <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                         <h2 className="mb-4 text-lg font-semibold text-slate-900 dark:text-slate-100">
@@ -230,6 +235,8 @@ export default function SettingsPage() {
                             </div>
                         </div>
                     </section>
+
+                    </>)}
 
                     {/* Verificacion en dos pasos: solo con sesion real contra la API. */}
                     {token && !mockMode && <MfaSection />}

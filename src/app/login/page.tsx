@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import {
   ApiError,
+  canConfigureApiUrl,
   googleLogin,
   isMfaChallenge,
   login,
@@ -229,14 +230,20 @@ export default function LoginPage() {
 
           {mockMode && (
             <p className="mt-4 rounded-lg bg-blue-50 px-3 py-2 text-sm text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-              <strong>{t("login.demoBanner")}</strong> {t("login.demoBannerBody")}{" "}
-              <Link
-                href="/settings"
-                className="underline hover:no-underline dark:text-blue-200"
-              >
-                {t("login.configureApi")}
-              </Link>
-              .
+              <strong>{t("login.demoBanner")}</strong> {t("login.demoBannerBody")}
+              {/* Solo en desarrollo: en produccion la API no se configura aqui. */}
+              {canConfigureApiUrl() && (
+                <>
+                  {" "}
+                  <Link
+                    href="/settings"
+                    className="underline hover:no-underline dark:text-blue-200"
+                  >
+                    {t("login.configureApi")}
+                  </Link>
+                  .
+                </>
+              )}
             </p>
           )}
 

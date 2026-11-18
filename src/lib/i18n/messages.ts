@@ -176,6 +176,7 @@ export const es = {
 
   "settings.title": "Configuración",
   "settings.subtitle": "Configura la conexión a la API de FinanceTracker",
+  "settings.subtitleAccount": "Seguridad de tu cuenta",
   "settings.apiSection": "Conexión a API",
   "settings.apiUrl": "URL de la API",
   "settings.useDefault": "Déjalo vacío para usar la de por defecto: {url}",
@@ -416,6 +417,7 @@ export const en: Record<MessageKey, string> = {
 
   "settings.title": "Settings",
   "settings.subtitle": "Set up the connection to the FinanceTracker API",
+  "settings.subtitleAccount": "Your account security",
   "settings.apiSection": "API connection",
   "settings.apiUrl": "API URL",
   "settings.useDefault": "Leave it empty to use the default one: {url}",

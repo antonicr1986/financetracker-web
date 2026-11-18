@@ -4,6 +4,7 @@ import {
   clearSessionExpired,
   createTransaction,
   deleteTransaction,
+  canConfigureApiUrl,
   getApiUrl,
   getCategories,
   getToken,
@@ -66,6 +67,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
 });
 
 describe("API URL", () => {
@@ -85,6 +87,14 @@ describe("API URL", () => {
     localStorage.setItem(API_URL_KEY, `  ${API}///  `);
 
     expect(getApiUrl()).toBe(API);
+  });
+
+  it("ignores a saved URL in production, so nobody can point users to another API", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    localStorage.setItem(API_URL_KEY, "https://api-del-atacante.example");
+
+    expect(canConfigureApiUrl()).toBe(false);
+    expect(getApiUrl()).not.toBe("https://api-del-atacante.example");
   });
 
   it("treats a blank saved URL as not configured", () => {

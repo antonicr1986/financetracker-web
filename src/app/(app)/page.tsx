@@ -7,7 +7,7 @@ import CollapsibleSection from "@/components/CollapsibleSection";
 import TransactionDialog from "@/components/TransactionDialog";
 import BudgetsSection from "@/components/BudgetsSection";
 import CategoriesSection from "@/components/CategoriesSection";
-import { ApiError, getTransactions } from "@/lib/api/client";
+import { ApiError, canConfigureApiUrl, getTransactions } from "@/lib/api/client";
 import { useMockMode } from "@/lib/useMockMode";
 import { useT } from "@/lib/i18n/useT";
 import { useApiErrorMessage } from "@/lib/i18n/useApiError";
@@ -173,7 +173,12 @@ export default function Home() {
           // Sin API configurada no hay nada que reintentar: se lleva al usuario
           // a la pantalla donde puede indicarla. Se comprueba el codigo y no el
           // texto, que ahora depende del idioma.
-          if (cause instanceof ApiError && cause.code === "api_not_configured") {
+          // Solo en desarrollo: en produccion la API no se configura desde la web.
+          if (
+            cause instanceof ApiError &&
+            cause.code === "api_not_configured" &&
+            canConfigureApiUrl()
+          ) {
             setTimeout(() => router.push("/settings"), 2000);
           }
         })
@@ -333,7 +338,9 @@ export default function Home() {
           <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-200">
             <p className="font-medium">{t("dashboard.demoTitle")}</p>
             {/* Partido en dos claves porque lleva un enlace en medio: t()
-                devuelve texto, no JSX, y no puede insertar el <a>. */}
+                devuelve texto, no JSX, y no puede insertar el <a>. Solo en
+                desarrollo: en produccion la API no se configura desde la web. */}
+            {canConfigureApiUrl() && (
             <p className="mt-1">
               {t("dashboard.demoBodyStart")}{" "}
               <a
@@ -344,6 +351,7 @@ export default function Home() {
               </a>{" "}
               {t("dashboard.demoBodyEnd")}
             </p>
+            )}
           </div>
         )}
 

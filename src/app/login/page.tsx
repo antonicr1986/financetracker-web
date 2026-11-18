@@ -107,14 +107,14 @@ export default function LoginPage() {
     enterWith(response);
   }
 
-  async function verifyCode(code: string) {
+  async function verifyCode(code: string, rememberDevice: boolean) {
     if (!mfaToken) return;
 
     setError(null);
     setIsSubmitting(true);
 
     try {
-      enterWith(await verifyMfa(mfaToken, code));
+      enterWith(await verifyMfa(mfaToken, code, rememberDevice));
     } catch (cause: unknown) {
       // El token del segundo paso dura 5 minutos: si ha caducado, se vuelve
       // a pedir la contraseña.

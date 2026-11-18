@@ -13,6 +13,8 @@ import {
   googleLogin,
   isMfaChallenge,
   verifyMfa,
+  forgetTrustedDevices,
+  getTrustedDeviceToken,
   isUsingMockData,
   login,
   register,
@@ -300,9 +302,54 @@ describe("errors", () => {
 
     const { url, init } = lastCall();
     expect(url).toBe(`${API}/api/users/mfa/verify`);
-    expect(JSON.parse(init.body as string)).toEqual({ mfaToken: "mfa-token", code: "123456" });
+    expect(JSON.parse(init.body as string)).toEqual({ mfaToken: "mfa-token", code: "123456", rememberDevice: false });
     expect(isMfaChallenge(response)).toBe(false);
     expect(response.token).toBe("jwt");
+  });
+
+  it("remembers the device when asked and sends it on the next sign-in", async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse({
+        token: "jwt",
+        expiration: "2026-11-05T12:00:00Z",
+        user: { id: 7, name: "Ana", email: "ana@example.test" },
+        trustedDeviceToken: "device-123",
+      }),
+    );
+
+    await verifyMfa("mfa-token", "123456", true);
+
+    expect(JSON.parse(lastCall().init.body as string)).toEqual({
+      mfaToken: "mfa-token",
+      code: "123456",
+      rememberDevice: true,
+    });
+    expect(getTrustedDeviceToken()).toBe("device-123");
+
+    // Respuesta nueva: el cuerpo de una respuesta solo se puede leer una vez.
+    fetchMock.mockResolvedValue(
+      jsonResponse({ token: "jwt-2", expiration: "2026-11-05T13:00:00Z", user: { id: 7, name: "Ana", email: "ana@example.test" } }),
+    );
+    await login("ana@example.test", "una-clave-larga");
+
+    expect(JSON.parse(lastCall().init.body as string)).toEqual({
+      email: "ana@example.test",
+      password: "una-clave-larga",
+      trustedDeviceToken: "device-123",
+    });
+  });
+
+  it("forgets the trusted device locally after asking the API", async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse({ token: "jwt", expiration: "2026-11-05T12:00:00Z", user: { id: 7, name: "Ana", email: "ana@example.test" }, trustedDeviceToken: "device-123" }),
+    );
+    await verifyMfa("mfa-token", "123456", true);
+
+    fetchMock.mockResolvedValue(new Response(null, { status: 204 }));
+    await forgetTrustedDevices();
+
+    expect(lastCall().url).toBe(`${API}/api/users/mfa/forget-devices`);
+    expect(getTrustedDeviceToken()).toBeNull();
   });
 
   it("reports a rejected Google sign-in as invalid_google_token, not as an expired session", async () => {

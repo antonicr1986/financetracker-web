@@ -20,6 +20,10 @@ const API_URL_STORAGE_KEY = "financetracker.api.url";
 const TOKEN_KEY = "financetracker.token"; // gitleaks:allow
 const USER_KEY = "financetracker.user";
 const EXPIRED_KEY = "financetracker.session-expired";
+// Dispositivo de confianza del MFA. Se guarda aparte de la sesion a proposito:
+// cerrar sesion no lo borra (es el dispositivo el que es de confianza, no la
+// sesion). Lo borran "Olvidar dispositivos" y desactivar el MFA.
+const TRUSTED_DEVICE_KEY = "financetracker.trusted-device"; // gitleaks:allow
 
 /**
  * URL por defecto de la API, fijada en tiempo de compilacion con la variable
@@ -558,9 +562,10 @@ export async function login(
 
   // POST /api/Users/login -> { token, expiration, user }, o bien
   // { mfaRequired, mfaToken } si la cuenta tiene verificacion en dos pasos.
+  // Con un dispositivo de confianza valido, la API se salta el codigo.
   return request<SignInResponse>("/api/Users/login", {
     method: "POST",
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email, password, trustedDeviceToken: getTrustedDeviceToken() ?? undefined }),
   });
 }
 
@@ -576,8 +581,28 @@ export async function googleLogin(
 ): Promise<SignInResponse> {
   return request<SignInResponse>("/api/Users/google", {
     method: "POST",
-    body: JSON.stringify({ idToken, language }),
+    body: JSON.stringify({ idToken, language, trustedDeviceToken: getTrustedDeviceToken() ?? undefined }),
   });
+}
+
+/** Token de dispositivo de confianza guardado en este navegador, o null. */
+export function getTrustedDeviceToken(): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return localStorage.getItem(TRUSTED_DEVICE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function setTrustedDeviceToken(value: string | null) {
+  if (typeof window === "undefined") return;
+  try {
+    if (value) localStorage.setItem(TRUSTED_DEVICE_KEY, value);
+    else localStorage.removeItem(TRUSTED_DEVICE_KEY);
+  } catch {
+    // Modo privado: simplemente se volvera a pedir el codigo.
+  }
 }
 
 /** true si el login pide el segundo paso en lugar de abrir la sesion. */
@@ -585,12 +610,30 @@ export function isMfaChallenge(response: SignInResponse): response is MfaChallen
   return "mfaRequired" in response && response.mfaRequired === true;
 }
 
-/** Segundo paso del login: codigo de la app autenticadora o de recuperacion. */
-export async function verifyMfa(mfaToken: string, code: string): Promise<LoginResponseDto> {
-  return request<LoginResponseDto>("/api/users/mfa/verify", {
+/**
+ * Segundo paso del login: codigo de la app autenticadora o de recuperacion.
+ * Con rememberDevice, la API devuelve un token para no volver a pedir el
+ * codigo en este navegador durante 30 dias, y se guarda aqui.
+ */
+export async function verifyMfa(
+  mfaToken: string,
+  code: string,
+  rememberDevice = false,
+): Promise<LoginResponseDto> {
+  const response = await request<LoginResponseDto>("/api/users/mfa/verify", {
     method: "POST",
-    body: JSON.stringify({ mfaToken, code }),
+    body: JSON.stringify({ mfaToken, code, rememberDevice }),
   });
+
+  if (response.trustedDeviceToken) setTrustedDeviceToken(response.trustedDeviceToken);
+
+  return response;
+}
+
+/** "Olvidar todos los dispositivos": el siguiente acceso pide el codigo en todos. */
+export async function forgetTrustedDevices(): Promise<void> {
+  await request<void>("/api/users/mfa/forget-devices", { method: "POST" });
+  setTrustedDeviceToken(null);
 }
 
 /** Genera el secreto (aun sin activar) y el enlace para el QR. */
@@ -611,4 +654,6 @@ export async function disableMfa(code: string): Promise<void> {
     method: "POST",
     body: JSON.stringify({ code }),
   });
+  // La API ya ha olvidado los dispositivos: el token guardado no sirve.
+  setTrustedDeviceToken(null);
 }

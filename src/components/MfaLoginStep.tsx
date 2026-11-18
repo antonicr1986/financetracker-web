@@ -6,7 +6,7 @@ import { useT } from "@/lib/i18n/useT";
 interface MfaLoginStepProps {
   isSubmitting: boolean;
   error: string | null;
-  onVerify: (code: string) => void;
+  onVerify: (code: string, rememberDevice: boolean) => void;
   onBack: () => void;
 }
 
@@ -18,10 +18,11 @@ interface MfaLoginStepProps {
 export default function MfaLoginStep({ isSubmitting, error, onVerify, onBack }: MfaLoginStepProps) {
   const t = useT();
   const [code, setCode] = useState("");
+  const [rememberDevice, setRememberDevice] = useState(false);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (code.trim()) onVerify(code.trim());
+    if (code.trim()) onVerify(code.trim(), rememberDevice);
   }
 
   return (
@@ -49,6 +50,18 @@ export default function MfaLoginStep({ isSubmitting, error, onVerify, onBack }: 
         className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-slate-500 dark:focus:ring-slate-800 dark:disabled:bg-slate-900 dark:disabled:text-slate-500 font-mono tracking-widest"
         placeholder="123456"
       />
+
+      {/* Desmarcada por defecto: en un ordenador compartido no conviene. */}
+      <label className="mt-4 flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
+        <input
+          type="checkbox"
+          checked={rememberDevice}
+          onChange={(event) => setRememberDevice(event.target.checked)}
+          disabled={isSubmitting}
+          className="mt-0.5 h-4 w-4 rounded border-slate-300 dark:border-slate-700"
+        />
+        <span>{t("mfa.rememberDevice")}</span>
+      </label>
 
       {error && (
         <p role="alert" className="mt-4 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:bg-rose-950 dark:text-rose-300">

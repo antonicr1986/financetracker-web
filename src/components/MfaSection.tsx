@@ -5,6 +5,7 @@ import QRCode from "qrcode";
 import {
   confirmMfa,
   disableMfa,
+  forgetTrustedDevices,
   getStoredUserRaw,
   getUser,
   setUser,
@@ -51,6 +52,7 @@ export default function MfaSection() {
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
+  const [devicesForgotten, setDevicesForgotten] = useState(false);
 
   async function run(action: () => Promise<void>) {
     setError(null);
@@ -65,6 +67,7 @@ export default function MfaSection() {
   }
 
   function reset() {
+    setDevicesForgotten(false);
     setStep({ kind: "idle" });
     setCode("");
     setError(null);
@@ -89,6 +92,12 @@ export default function MfaSection() {
       setStep({ kind: "codes", recoveryCodes: result.recoveryCodes });
     });
   };
+
+  const forgetDevices = () =>
+    run(async () => {
+      await forgetTrustedDevices();
+      setDevicesForgotten(true);
+    });
 
   const disable = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -129,6 +138,25 @@ export default function MfaSection() {
         </span>
       </div>
       <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{t("mfa.description")}</p>
+
+      {step.kind === "idle" && enabled && (
+        <div className="mt-4 rounded-lg bg-slate-100 p-3 text-sm text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+          <p>{t("mfa.forgetDevicesHelp")}</p>
+          <button
+            type="button"
+            onClick={forgetDevices}
+            disabled={isBusy}
+            className="mt-2 font-medium text-slate-900 underline-offset-2 hover:underline disabled:text-slate-400 dark:text-slate-100"
+          >
+            {t("mfa.forgetDevices")}
+          </button>
+          {devicesForgotten && (
+            <p role="status" className="mt-1 text-emerald-700 dark:text-emerald-300">
+              {t("mfa.devicesForgotten")}
+            </p>
+          )}
+        </div>
+      )}
 
       {step.kind === "idle" && (
         <button

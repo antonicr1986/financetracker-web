@@ -242,6 +242,10 @@ export const es = {
   "mfa.verify": "Verificar",
   "mfa.verifying": "Verificando...",
   "mfa.back": "Volver",
+  "mfa.rememberDevice": "No volver a pedir el código en este dispositivo durante 30 días",
+  "mfa.forgetDevicesHelp": "Los dispositivos en los que marcaste \"no volver a pedir el código\" entran sin él durante 30 días.",
+  "mfa.forgetDevices": "Olvidar todos los dispositivos",
+  "mfa.devicesForgotten": "Hecho: el próximo acceso pedirá el código en todos tus dispositivos.",
 };
 
 export type MessageKey = keyof typeof es;
@@ -483,6 +487,10 @@ export const en: Record<MessageKey, string> = {
   "mfa.verify": "Verify",
   "mfa.verifying": "Verifying...",
   "mfa.back": "Back",
+  "mfa.rememberDevice": "Don't ask for the code on this device for 30 days",
+  "mfa.forgetDevicesHelp": "Devices where you ticked \"don't ask for the code\" sign in without it for 30 days.",
+  "mfa.forgetDevices": "Forget all devices",
+  "mfa.devicesForgotten": "Done: your next sign-in will ask for the code on every device.",
 };
 
 export const dictionaries: Record<"es" | "en", Record<MessageKey, string>> = {

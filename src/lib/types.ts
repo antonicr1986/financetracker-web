@@ -52,6 +52,11 @@ export interface LoginResponseDto {
   token: string;
   expiration: string;
   user: UserDto;
+  /**
+   * Solo tras verificar el MFA marcando "no volver a pedir en este
+   * dispositivo": se guarda y se envia en los siguientes accesos.
+   */
+  trustedDeviceToken?: string | null;
 }
 
 /**

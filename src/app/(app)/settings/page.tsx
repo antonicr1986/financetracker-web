@@ -6,10 +6,12 @@ import {
     canConfigureApiUrl,
     getDefaultApiUrl,
     getToken,
+    revokeAllSessions,
     setToken,
     setUser,
 } from "@/lib/api/client";
 import { useT } from "@/lib/i18n/useT";
+import { useApiErrorMessage } from "@/lib/i18n/useApiError";
 import { useMockMode } from "@/lib/useMockMode";
 import MfaSection from "@/components/MfaSection";
 
@@ -51,6 +53,9 @@ export default function SettingsPage() {
     // Conexion a la API y Estado son herramientas de desarrollo: en produccion
     // no existen (ver canConfigureApiUrl) y aqui solo queda la seguridad.
     const showApiSettings = canConfigureApiUrl();
+    const describeError = useApiErrorMessage();
+    const [isRevoking, setIsRevoking] = useState(false);
+    const [revokeError, setRevokeError] = useState<string | null>(null);
 
     async function handleSave(e: React.FormEvent) {
         e.preventDefault();
@@ -117,6 +122,21 @@ export default function SettingsPage() {
         setToken(null);
         setUser(null);
         router.push("/login");
+    }
+
+    async function handleSignOutEverywhere() {
+        if (!window.confirm(t("settings.signOutEverywhereConfirm"))) return;
+
+        setIsRevoking(true);
+        setRevokeError(null);
+
+        try {
+            await revokeAllSessions();
+            router.push("/login");
+        } catch (err) {
+            setRevokeError(describeError(err, "settings.signOutEverywhereFailed"));
+            setIsRevoking(false);
+        }
     }
 
     return (
@@ -248,6 +268,29 @@ export default function SettingsPage() {
                     >
                         {t("settings.signOut")}
                     </button>
+
+                    {/* Cerrar sesion en todas partes: solo con sesion real contra la API. */}
+                    {token && !mockMode && (
+                        <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                            <p className="text-sm text-slate-500 dark:text-slate-400">
+                                {t("settings.signOutEverywhereHelp")}
+                            </p>
+
+                            {revokeError && (
+                                <div className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700 dark:bg-rose-950 dark:text-rose-300">
+                                    {revokeError}
+                                </div>
+                            )}
+
+                            <button
+                                onClick={handleSignOutEverywhere}
+                                disabled={isRevoking}
+                                className="mt-4 w-full rounded-lg bg-rose-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-rose-700 dark:hover:bg-rose-600"
+                            >
+                                {isRevoking ? t("settings.signingOutEverywhere") : t("settings.signOutEverywhere")}
+                            </button>
+                        </section>
+                    )}
                 </div>
             </div>
         </main>

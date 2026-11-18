@@ -14,6 +14,7 @@ import {
   isMfaChallenge,
   verifyMfa,
   forgetTrustedDevices,
+  revokeAllSessions,
   getTrustedDeviceToken,
   isUsingMockData,
   login,
@@ -350,6 +351,21 @@ describe("errors", () => {
 
     expect(lastCall().url).toBe(`${API}/api/users/mfa/forget-devices`);
     expect(getTrustedDeviceToken()).toBeNull();
+  });
+
+  it("signs out locally after revoking every session", async () => {
+    setToken("jwt");
+    setUser({ id: 7, name: "Ana", email: "ana@example.test" });
+    fetchMock.mockResolvedValue(new Response(null, { status: 204 }));
+
+    await revokeAllSessions();
+
+    expect(lastCall().url).toBe(`${API}/api/users/sessions/revoke`);
+    expect(lastCall().init.method).toBe("POST");
+    expect(getToken()).toBeNull();
+    expect(getUser()).toBeNull();
+    // Lo ha pedido el usuario: no es una sesion caducada.
+    expect(wasSessionExpired()).toBe(false);
   });
 
   it("reports a rejected Google sign-in as invalid_google_token, not as an expired session", async () => {

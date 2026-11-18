@@ -636,6 +636,17 @@ export async function forgetTrustedDevices(): Promise<void> {
   setTrustedDeviceToken(null);
 }
 
+/**
+ * "Cerrar sesion en todos los dispositivos": la API invalida todos los JWT de
+ * la cuenta, tambien el de este navegador, asi que aqui se cierra la sesion.
+ * El dispositivo de confianza del MFA se conserva: eso es forgetTrustedDevices.
+ */
+export async function revokeAllSessions(): Promise<void> {
+  await request<void>("/api/users/sessions/revoke", { method: "POST" });
+  setToken(null);
+  setUser(null);
+}
+
 /** Genera el secreto (aun sin activar) y el enlace para el QR. */
 export async function setupMfa(): Promise<MfaSetupDto> {
   return request<MfaSetupDto>("/api/users/mfa/setup", { method: "POST" });

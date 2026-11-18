@@ -17,18 +17,18 @@ const actionClasses =
   "shrink-0 whitespace-nowrap rounded-lg border p-1.5 text-sm font-medium transition sm:px-3";
 
 const brandClasses =
-  "flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100";
+  "flex min-w-0 items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100";
 
 /**
  * Logo + nombre, igual que en la app de escritorio. El logo es decorativo: el
- * texto ya da el nombre. En el movil el nombre no cabe junto a los botones:
- * se queda solo el logo, y el texto sigue ahi para los lectores de pantalla.
+ * texto ya da el nombre. Se ve siempre; en un movil muy estrecho se acorta con
+ * "..." antes que empujar los botones fuera de la pantalla.
  */
 function Brand() {
   return (
     <>
-      <Image src="/logo.svg" alt="" width={24} height={24} priority />
-      <span className="sr-only sm:not-sr-only">FinanceTracker</span>
+      <Image src="/logo.svg" alt="" width={24} height={24} priority className="shrink-0" />
+      <span className="truncate">FinanceTracker</span>
     </>
   );
 }
@@ -82,7 +82,7 @@ export default function TopBar() {
 
   return (
     <header className="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-      <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
+      <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
         {canNavigate ? (
           <Link
             href="/"
@@ -96,7 +96,7 @@ export default function TopBar() {
           </span>
         )}
 
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
           <CurrentUserEmail />
           <LocaleToggle />
           <ThemeToggle />

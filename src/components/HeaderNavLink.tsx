@@ -7,7 +7,7 @@ import StableLabel from "@/components/StableLabel";
 import { useT } from "@/lib/i18n/useT";
 
 const linkClasses =
-  "rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800";
+  "shrink-0 whitespace-nowrap rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800";
 
 /**
  * Entrada y salida de la pantalla de Configuracion.
@@ -55,9 +55,29 @@ export default function HeaderNavLink() {
     );
   }
 
+  // En el movil, "Resumen" es un icono de casa (como el engranaje); desde sm, texto.
   return hasSession ? (
-    <Link href="/" className={linkClasses}>
-      <StableLabel messageKey="header.summary" />
+    <Link
+      href="/"
+      title={t("header.summary")}
+      className={linkClasses.replace("px-3 py-1.5", "p-1.5 sm:px-3 sm:py-1.5")}
+    >
+      <svg
+        viewBox="0 0 24 24"
+        className="h-4 w-4 sm:hidden"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="m3 10 9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+        <path d="M9 22V12h6v10" />
+      </svg>
+      <span className="sr-only sm:not-sr-only">
+        <StableLabel messageKey="header.summary" />
+      </span>
     </Link>
   ) : (
     <Link href="/login" className={linkClasses}>

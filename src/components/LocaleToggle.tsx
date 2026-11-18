@@ -40,7 +40,10 @@ export default function LocaleToggle() {
                 : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
             }`}
           >
-            <Flag country={option === "es" ? "es" : "us"} />
+            {/* En el movil solo el codigo: la bandera es un adorno y no cabe. */}
+            <span className="hidden sm:inline-flex">
+              <Flag country={option === "es" ? "es" : "us"} />
+            </span>
             {option}
           </button>
         );

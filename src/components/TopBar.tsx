@@ -12,18 +12,48 @@ import LocaleToggle from "@/components/LocaleToggle";
 import StableLabel from "@/components/StableLabel";
 import { useT } from "@/lib/i18n/useT";
 
+// En el movil, "Salir" es un icono cuadrado como el del tema; desde sm, texto.
 const actionClasses =
-  "rounded-lg border px-3 py-1.5 text-sm font-medium transition";
+  "shrink-0 whitespace-nowrap rounded-lg border p-1.5 text-sm font-medium transition sm:px-3";
 
 const brandClasses =
   "flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100";
 
-/** Logo + nombre, igual que en la app de escritorio. El logo es decorativo: el texto ya da el nombre. */
+/**
+ * Logo + nombre, igual que en la app de escritorio. El logo es decorativo: el
+ * texto ya da el nombre. En el movil el nombre no cabe junto a los botones:
+ * se queda solo el logo, y el texto sigue ahi para los lectores de pantalla.
+ */
 function Brand() {
   return (
     <>
       <Image src="/logo.svg" alt="" width={24} height={24} priority />
-      FinanceTracker
+      <span className="sr-only sm:not-sr-only">FinanceTracker</span>
+    </>
+  );
+}
+
+/** Icono de salir en el movil, texto desde sm. */
+function SignOutContent() {
+  return (
+    <>
+      <svg
+        viewBox="0 0 24 24"
+        className="h-4 w-4 sm:hidden"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+        <path d="m16 17 5-5-5-5" />
+        <path d="M21 12H9" />
+      </svg>
+      <span className="sr-only sm:not-sr-only">
+        <StableLabel messageKey="header.signOut" />
+      </span>
     </>
   );
 }
@@ -77,7 +107,7 @@ export default function TopBar() {
               onClick={handleLogout}
               className={`${actionClasses} cursor-pointer border-slate-300 text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800`}
             >
-              <StableLabel messageKey="header.signOut" />
+              <SignOutContent />
             </button>
           ) : (
             <button
@@ -86,7 +116,7 @@ export default function TopBar() {
               title={t("header.noSession")}
               className={`${actionClasses} cursor-not-allowed border-slate-200 text-slate-400 dark:border-slate-800 dark:text-slate-600`}
             >
-              <StableLabel messageKey="header.signOut" />
+              <SignOutContent />
             </button>
           )}
         </div>

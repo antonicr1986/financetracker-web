@@ -210,7 +210,7 @@ export default function SettingsPage() {
                                 <p className="text-sm text-slate-500 dark:text-slate-400">
                                     {t("settings.apiUrl")}
                                 </p>
-                                <p className="mt-1 font-mono text-sm text-slate-900 dark:text-slate-100">
+                                <p className="mt-1 break-all font-mono text-sm text-slate-900 dark:text-slate-100">
                                     {effectiveApiUrl || t("settings.notConfigured")}
                                 </p>
                                 {!savedApiUrl && effectiveApiUrl && (

@@ -14,6 +14,7 @@ import { useT } from "@/lib/i18n/useT";
 import { useApiErrorMessage } from "@/lib/i18n/useApiError";
 import { useMockMode } from "@/lib/useMockMode";
 import MfaSection from "@/components/MfaSection";
+import ChangePasswordSection from "@/components/ChangePasswordSection";
 
 const STORAGE_KEY = "financetracker.api.url";
 
@@ -260,6 +261,8 @@ export default function SettingsPage() {
 
                     {/* Verificacion en dos pasos: solo con sesion real contra la API. */}
                     {token && !mockMode && <MfaSection />}
+
+                    {token && !mockMode && <ChangePasswordSection />}
 
                     {/* Logout */}
                     <button

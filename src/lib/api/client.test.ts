@@ -15,6 +15,7 @@ import {
   verifyMfa,
   forgetTrustedDevices,
   revokeAllSessions,
+  changePassword,
   checkSession,
   getTrustedDeviceToken,
   isUsingMockData,
@@ -380,6 +381,34 @@ describe("errors", () => {
     await checkSession();
 
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("keeps this browser signed in with the new token after changing the password", async () => {
+    setToken("old-jwt");
+    setUser({ id: 7, name: "Ana", email: "ana@example.test" });
+    fetchMock.mockResolvedValue(
+      jsonResponse({ token: "new-jwt", expiration: "2026-11-20T12:00:00Z", user: { id: 7, name: "Ana", email: "ana@example.test" } }),
+    );
+
+    await changePassword("la-actual-larga", "la-nueva-larga");
+
+    expect(lastCall().url).toBe(`${API}/api/users/password`);
+    expect(JSON.parse(lastCall().init.body as string)).toEqual({
+      currentPassword: "la-actual-larga",
+      newPassword: "la-nueva-larga",
+    });
+    expect(getToken()).toBe("new-jwt");
+  });
+
+  it("keeps the session when the current password is wrong", async () => {
+    setToken("jwt");
+    setUser({ id: 7, name: "Ana", email: "ana@example.test" });
+    fetchMock.mockResolvedValue(jsonResponse({ code: "invalid_current_password" }, 400));
+
+    const error = await errorOf(changePassword("mal", "la-nueva-larga"));
+
+    expect(error.serverCode).toBe("invalid_current_password");
+    expect(getToken()).toBe("jwt");
   });
 
   it("signs out locally after revoking every session", async () => {

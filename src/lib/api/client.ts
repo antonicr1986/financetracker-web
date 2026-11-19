@@ -651,6 +651,20 @@ export async function checkSession(): Promise<void> {
 }
 
 /**
+ * Cambia la contraseña. La API cierra todas las sesiones, tambien esta, y
+ * devuelve un JWT nuevo: se guarda para que este navegador siga dentro.
+ * Los errores llegan como 400 con su codigo (invalid_current_password...).
+ */
+export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
+  const response = await request<LoginResponseDto>("/api/users/password", {
+    method: "POST",
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+  setToken(response.token);
+  setUser(response.user);
+}
+
+/**
  * "Cerrar sesion en todos los dispositivos": la API invalida todos los JWT de
  * la cuenta, tambien el de este navegador, asi que aqui se cierra la sesion.
  * El dispositivo de confianza del MFA se conserva: eso es forgetTrustedDevices.

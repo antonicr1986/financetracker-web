@@ -22,6 +22,9 @@ const SERVER_CODES = new Set([
   "mfa_already_enabled",
   "mfa_not_enabled",
   "mfa_setup_not_started",
+  "invalid_current_password",
+  "password_unchanged",
+  "password_not_available",
 ]);
 
 /**

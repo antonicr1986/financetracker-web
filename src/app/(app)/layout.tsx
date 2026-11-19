@@ -3,6 +3,7 @@
 import TopBar from "@/components/TopBar";
 import SiteFooter from "@/components/SiteFooter";
 import { useSessionGuard } from "@/lib/useSessionGuard";
+import { useSessionCheckOnReturn } from "@/lib/useSessionCheckOnReturn";
 
 export default function AppLayout({
   children,
@@ -12,6 +13,9 @@ export default function AppLayout({
   // Sin sesion, el guard redirige al acceso y aqui no se pinta el contenido:
   // asi el panel no llega a montarse ni a lanzar una peticion condenada al 401.
   const canRender = useSessionGuard();
+
+  // Si la sesion se cerro desde otro dispositivo, se nota al volver a la pestana.
+  useSessionCheckOnReturn();
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-200 dark:bg-slate-950">

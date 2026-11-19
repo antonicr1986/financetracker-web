@@ -15,6 +15,7 @@ import {
   verifyMfa,
   forgetTrustedDevices,
   revokeAllSessions,
+  checkSession,
   getTrustedDeviceToken,
   isUsingMockData,
   login,
@@ -351,6 +352,34 @@ describe("errors", () => {
 
     expect(lastCall().url).toBe(`${API}/api/users/mfa/forget-devices`);
     expect(getTrustedDeviceToken()).toBeNull();
+  });
+
+  it("checks the session with the current user and refreshes it", async () => {
+    setToken("jwt");
+    setUser({ id: 7, name: "Ana", email: "ana@example.test" });
+    fetchMock.mockResolvedValue(jsonResponse({ id: 7, name: "Ana", email: "ana@example.test", mfaEnabled: true }));
+
+    await checkSession();
+
+    expect(lastCall().url).toBe(`${API}/api/Users/7`);
+    expect(getUser()).toEqual({ id: 7, name: "Ana", email: "ana@example.test", mfaEnabled: true });
+  });
+
+  it("ends the session when it was revoked from another device", async () => {
+    setToken("jwt");
+    setUser({ id: 7, name: "Ana", email: "ana@example.test" });
+    fetchMock.mockResolvedValue(jsonResponse({}, 401));
+
+    await expect(checkSession()).rejects.toBeInstanceOf(ApiError);
+
+    expect(getToken()).toBeNull();
+    expect(wasSessionExpired()).toBe(true);
+  });
+
+  it("does not call the API without a session", async () => {
+    await checkSession();
+
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("signs out locally after revoking every session", async () => {

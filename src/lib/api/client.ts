@@ -637,6 +637,20 @@ export async function forgetTrustedDevices(): Promise<void> {
 }
 
 /**
+ * Comprueba que la sesion sigue valida con una peticion ligera (el propio
+ * usuario). Si se cerro desde otro dispositivo, la API responde 401 y request()
+ * borra la sesion: el guard de (app) lleva al acceso. De paso refresca los
+ * datos guardados del usuario (por ejemplo, si activo el MFA en otro sitio).
+ */
+export async function checkSession(): Promise<void> {
+  const user = getUser();
+  if (!user || getToken() === null || isUsingMockData()) return;
+
+  const fresh = await request<UserDto>(`/api/Users/${user.id}`);
+  setUser(fresh);
+}
+
+/**
  * "Cerrar sesion en todos los dispositivos": la API invalida todos los JWT de
  * la cuenta, tambien el de este navegador, asi que aqui se cierra la sesion.
  * El dispositivo de confianza del MFA se conserva: eso es forgetTrustedDevices.

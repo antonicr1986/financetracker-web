@@ -5,33 +5,9 @@ import { usePathname, useRouter } from "next/navigation";
 import { getToken } from "@/lib/api/client";
 import { useHasSession } from "@/lib/useSession";
 
-const RETURN_URL_KEY = "financetracker.return-url";
-
-/** Donde estaba el usuario cuando se le pidio identificarse. */
-function setReturnUrl(url: string) {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem(RETURN_URL_KEY, url);
-  } catch {
-    // Modo privado: volvera al panel en vez de a donde estaba.
-  }
-}
-
-/** Lo lee la pantalla de acceso tras un login correcto, y lo borra. */
-export function getAndClearReturnUrl(): string | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const url = localStorage.getItem(RETURN_URL_KEY);
-    if (url) localStorage.removeItem(RETURN_URL_KEY);
-    return url;
-  } catch {
-    return null;
-  }
-}
-
 /**
- * Protege las rutas de (app). Sin token lleva al acceso, guardando antes donde
- * estabamos para poder volver.
+ * Protege las rutas de (app). Sin token lleva al acceso; tras entrar se va
+ * siempre al resumen, no a la pagina en la que se estaba.
  *
  * Devuelve si se puede pintar el contenido. Importa que el layout lo respete:
  * si dejaramos montar el panel mientras se redirige, lanzaria su peticion, se
@@ -49,7 +25,6 @@ export function useSessionGuard(): boolean {
 
   useEffect(() => {
     if (getToken() !== null) return;
-    setReturnUrl(pathname);
     router.replace("/login");
   }, [hasSession, pathname, router]);
 

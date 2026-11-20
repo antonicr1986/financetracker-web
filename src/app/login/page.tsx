@@ -15,7 +15,6 @@ import {
   clearSessionExpired,
   warmUpApi,
 } from "@/lib/api/client";
-import { getAndClearReturnUrl } from "@/lib/useSessionGuard";
 import { useMockMode } from "@/lib/useMockMode";
 import { useLocale, useT } from "@/lib/i18n/useT";
 import { useApiErrorMessage } from "@/lib/i18n/useApiError";
@@ -39,6 +38,7 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSlow, setIsSlow] = useState(false);
@@ -138,10 +138,9 @@ export default function LoginPage() {
     // El aviso de sesion caducada ya ha cumplido: se borra al entrar.
     clearSessionExpired();
 
-    // Si hay una URL guardada (porque la sesión expiró), volver allí
-    // Si no, ir a la página principal
-    const returnUrl = getAndClearReturnUrl();
-    router.push(returnUrl || "/");
+    // Siempre al resumen, venga de donde venga: volver a la pagina en la que
+    // se cerro la sesion (por ejemplo Configuracion) desorientaba mas que ayudaba.
+    router.push("/");
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -208,16 +207,33 @@ export default function LoginPage() {
           >
             {t("login.password")}
           </label>
+          <div className="relative mt-1.5">
           <input
             id="password"
-            type="password"
+            type={showPassword ? "text" : "password"}
             autoComplete="current-password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             disabled={isSubmitting}
-            className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-600 dark:focus:border-slate-500 dark:focus:ring-slate-800 dark:disabled:bg-slate-900 dark:disabled:text-slate-500"
+            className="w-full rounded-lg border border-slate-300 py-2 pl-3 pr-10 text-sm text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-600 dark:focus:border-slate-500 dark:focus:ring-slate-800 dark:disabled:bg-slate-900 dark:disabled:text-slate-500"
             placeholder="********"
           />
+          {/* Ver u ocultar lo escrito. type="button": no envia el formulario. */}
+          <button
+            type="button"
+            onClick={() => setShowPassword((current) => !current)}
+            aria-label={t(showPassword ? "login.hidePassword" : "login.showPassword")}
+            aria-pressed={showPassword}
+            title={t(showPassword ? "login.hidePassword" : "login.showPassword")}
+            className="absolute inset-y-0 right-0 flex w-10 items-center justify-center rounded-r-lg text-slate-500 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 dark:text-slate-400 dark:hover:text-slate-600 dark:focus-visible:ring-slate-700"
+          >
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+              <circle cx="12" cy="12" r="3" />
+              {showPassword && <path d="M3 3l18 18" />}
+            </svg>
+          </button>
+          </div>
 
           {error && (
             <p

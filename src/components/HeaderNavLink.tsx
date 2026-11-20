@@ -55,16 +55,18 @@ export default function HeaderNavLink() {
     );
   }
 
-  // En el movil, "Resumen" es un icono de casa (como el engranaje); desde sm, texto.
+  // Volver al resumen: un icono de casa del mismo tamaño que el engranaje, en
+  // todas las pantallas, igual que en Android y escritorio.
   return hasSession ? (
     <Link
       href="/"
+      aria-label={t("header.summary")}
       title={t("header.summary")}
-      className={linkClasses.replace("px-3 py-1.5", "p-1.5 sm:px-3 sm:py-1.5")}
+      className="rounded-lg border border-slate-300 p-1.5 text-slate-600 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
     >
       <svg
         viewBox="0 0 24 24"
-        className="h-4 w-4 sm:hidden"
+        className="h-4 w-4"
         fill="none"
         stroke="currentColor"
         strokeWidth={2}
@@ -75,9 +77,6 @@ export default function HeaderNavLink() {
         <path d="m3 10 9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
         <path d="M9 22V12h6v10" />
       </svg>
-      <span className="sr-only sm:not-sr-only">
-        <StableLabel messageKey="header.summary" />
-      </span>
     </Link>
   ) : (
     <Link href="/login" className={linkClasses}>

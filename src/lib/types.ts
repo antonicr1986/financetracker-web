@@ -45,6 +45,12 @@ export interface UserDto {
   email: string;
   /** Opcional: las sesiones guardadas antes de existir el MFA no lo traen. */
   mfaEnabled?: boolean;
+  /**
+   * false en cuentas solo de Google y en la de demostracion: no tienen
+   * contraseña que cambiar ni pueden activar el MFA. Opcional: las sesiones
+   * guardadas antes de existir no lo traen, y entonces se asume que si.
+   */
+  hasPassword?: boolean;
 }
 
 /** Respuesta de POST /api/Users/login. */

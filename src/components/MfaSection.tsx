@@ -14,6 +14,7 @@ import {
 } from "@/lib/api/client";
 import { useT } from "@/lib/i18n/useT";
 import { useApiErrorMessage } from "@/lib/i18n/useApiError";
+import { useHasOwnPassword } from "@/lib/useSession";
 
 type Step =
   | { kind: "idle" }
@@ -47,6 +48,9 @@ export default function MfaSection() {
   const t = useT();
   const describeError = useApiErrorMessage();
   const enabled = useMfaEnabled();
+  // Sin contraseña propia no se puede activar; si ya estaba activo (cuenta
+  // vinculada a Google despues), si se puede desactivar.
+  const canEnable = useHasOwnPassword();
 
   const [step, setStep] = useState<Step>({ kind: "idle" });
   const [code, setCode] = useState("");
@@ -158,7 +162,11 @@ export default function MfaSection() {
         </div>
       )}
 
-      {step.kind === "idle" && (
+      {step.kind === "idle" && !enabled && !canEnable && (
+        <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">{t("apiError.mfa_not_available")}</p>
+      )}
+
+      {step.kind === "idle" && (enabled || canEnable) && (
         <button
           type="button"
           onClick={enabled ? () => setStep({ kind: "disable" }) : startSetup}

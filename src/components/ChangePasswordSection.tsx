@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { changePassword } from "@/lib/api/client";
 import { useT } from "@/lib/i18n/useT";
 import { useApiErrorMessage } from "@/lib/i18n/useApiError";
+import { useHasOwnPassword } from "@/lib/useSession";
 
 const inputClasses =
   "mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-600 dark:focus:border-slate-500 dark:focus:ring-slate-800 dark:disabled:bg-slate-900";
@@ -18,6 +19,7 @@ const labelClasses = "mt-3 block text-sm font-medium text-slate-700 dark:text-sl
 export default function ChangePasswordSection() {
   const t = useT();
   const describeError = useApiErrorMessage();
+  const hasPassword = useHasOwnPassword();
 
   const [isOpen, setIsOpen] = useState(false);
   const [current, setCurrent] = useState("");
@@ -64,7 +66,10 @@ export default function ChangePasswordSection() {
   return (
     <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
       <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{t("password.title")}</h2>
-      <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{t("password.description")}</p>
+      {/* Cuentas de Google o la demo: nada que cambiar, se explica en vez del boton. */}
+      <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+        {hasPassword ? t("password.description") : t("apiError.password_not_available")}
+      </p>
 
       {isChanged && (
         <p role="status" className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
@@ -72,7 +77,7 @@ export default function ChangePasswordSection() {
         </p>
       )}
 
-      {!isOpen ? (
+      {!hasPassword ? null : !isOpen ? (
         <button
           type="button"
           onClick={() => {

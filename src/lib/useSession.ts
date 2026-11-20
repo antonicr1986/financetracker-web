@@ -1,7 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { getToken, subscribeToSession } from "@/lib/api/client";
+import { getStoredUserRaw, getToken, subscribeToSession } from "@/lib/api/client";
 
 /**
  * Si hay sesion abierta. En el servidor devuelve false, que es lo que pinta el
@@ -15,4 +15,23 @@ export function useHasSession(): boolean {
     () => getToken() !== null,
     () => false,
   );
+}
+
+/**
+ * Si la cuenta tiene contraseña propia (ver UserDto.hasPassword). Solo un
+ * false explicito cuenta como "no": sin el dato (sesiones antiguas, o en el
+ * servidor) se sigue mostrando todo, como antes, y la API decide.
+ */
+export function accountHasPassword(rawUser: string | null): boolean {
+  if (!rawUser) return true;
+  try {
+    return JSON.parse(rawUser).hasPassword !== false;
+  } catch {
+    return true;
+  }
+}
+
+export function useHasOwnPassword(): boolean {
+  const raw = useSyncExternalStore(subscribeToSession, getStoredUserRaw, () => null);
+  return accountHasPassword(raw);
 }

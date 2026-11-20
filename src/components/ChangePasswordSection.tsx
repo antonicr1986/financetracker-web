@@ -12,6 +12,60 @@ const inputClasses =
 const labelClasses = "mt-3 block text-sm font-medium text-slate-700 dark:text-slate-300";
 
 /**
+ * Caja de contraseña con el ojo para ver u ocultar lo escrito, igual que en el
+ * acceso. Cada caja recuerda lo suyo; al cerrar el formulario se desmonta y
+ * vuelve a quedar oculta.
+ */
+function PasswordInput({
+  id,
+  value,
+  onChange,
+  disabled,
+  autoComplete,
+  placeholder,
+}: {
+  id: string;
+  value: string;
+  onChange: (value: string) => void;
+  disabled: boolean;
+  autoComplete: string;
+  placeholder?: string;
+}) {
+  const t = useT();
+  const [visible, setVisible] = useState(false);
+
+  return (
+    <div className="relative mt-1.5">
+      <input
+        id={id}
+        type={visible ? "text" : "password"}
+        autoComplete={autoComplete}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        disabled={disabled}
+        className={inputClasses.replace("mt-1.5 ", "").replace("px-3", "pl-3 pr-10")}
+        placeholder={placeholder}
+      />
+      {/* type="button": no envia el formulario. */}
+      <button
+        type="button"
+        onClick={() => setVisible((current) => !current)}
+        aria-label={t(visible ? "login.hidePassword" : "login.showPassword")}
+        aria-pressed={visible}
+        title={t(visible ? "login.hidePassword" : "login.showPassword")}
+        className="absolute inset-y-0 right-0 flex w-10 items-center justify-center rounded-r-lg text-slate-500 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 dark:text-slate-400 dark:hover:text-slate-600 dark:focus-visible:ring-slate-700"
+      >
+        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+          <circle cx="12" cy="12" r="3" />
+          {visible && <path d="M3 3l18 18" />}
+        </svg>
+      </button>
+    </div>
+  );
+}
+
+/**
  * Cambiar la contraseña: la actual, la nueva y su repeticion. Al guardarla, la
  * API cierra la sesion en los demas dispositivos; este sigue dentro con el
  * token nuevo que devuelve.
@@ -93,41 +147,35 @@ export default function ChangePasswordSection() {
           <label htmlFor="current-password" className={labelClasses}>
             {t("password.current")}
           </label>
-          <input
+          <PasswordInput
             id="current-password"
-            type="password"
             autoComplete="current-password"
             value={current}
-            onChange={(event) => setCurrent(event.target.value)}
+            onChange={setCurrent}
             disabled={isBusy}
-            className={inputClasses}
           />
 
           <label htmlFor="new-password" className={labelClasses}>
             {t("password.new")}
           </label>
-          <input
+          <PasswordInput
             id="new-password"
-            type="password"
             autoComplete="new-password"
             value={next}
-            onChange={(event) => setNext(event.target.value)}
+            onChange={setNext}
             disabled={isBusy}
-            className={inputClasses}
             placeholder={t("register.passwordPlaceholder")}
           />
 
           <label htmlFor="new-password-confirmation" className={labelClasses}>
             {t("password.confirm")}
           </label>
-          <input
+          <PasswordInput
             id="new-password-confirmation"
-            type="password"
             autoComplete="new-password"
             value={confirmation}
-            onChange={(event) => setConfirmation(event.target.value)}
+            onChange={setConfirmation}
             disabled={isBusy}
-            className={inputClasses}
           />
 
           {error && (

@@ -12,6 +12,9 @@ import {
   getUser,
   googleLogin,
   isMfaChallenge,
+  isEmailVerificationChallenge,
+  verifyEmail,
+  resendEmailCode,
   verifyMfa,
   forgetTrustedDevices,
   revokeAllSessions,
@@ -409,6 +412,35 @@ describe("errors", () => {
 
     expect(error.serverCode).toBe("invalid_current_password");
     expect(getToken()).toBe("jwt");
+  });
+
+  it("tells an email verification step apart from a session and from MFA", () => {
+    const challenge = { emailVerificationRequired: true as const, verificationToken: "v", email: "a@b.c", expiration: "" };
+
+    expect(isEmailVerificationChallenge(challenge)).toBe(true);
+    expect(isMfaChallenge(challenge)).toBe(false);
+    expect(isEmailVerificationChallenge({ mfaRequired: true, mfaToken: "m", expiration: "" })).toBe(false);
+  });
+
+  it("sends the email code with its verification token", async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse({ token: "jwt", expiration: "2026-11-20T12:00:00Z", user: { id: 7, name: "Ana", email: "ana@example.test" } }),
+    );
+
+    const response = await verifyEmail("verify-token", "123456");
+
+    expect(lastCall().url).toBe(`${API}/api/users/email/verify`);
+    expect(JSON.parse(lastCall().init.body as string)).toEqual({ verificationToken: "verify-token", code: "123456" });
+    expect(isEmailVerificationChallenge(response)).toBe(false);
+  });
+
+  it("asks for a new email code", async () => {
+    fetchMock.mockResolvedValue(new Response(null, { status: 204 }));
+
+    await resendEmailCode("verify-token");
+
+    expect(lastCall().url).toBe(`${API}/api/users/email/resend`);
+    expect(JSON.parse(lastCall().init.body as string)).toEqual({ verificationToken: "verify-token" });
   });
 
   it("signs out locally after revoking every session", async () => {

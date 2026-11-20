@@ -76,7 +76,19 @@ export interface MfaChallengeDto {
   expiration: string;
 }
 
-export type SignInResponse = LoginResponseDto | MfaChallengeDto;
+/**
+ * Respuesta del login cuando la contraseña es correcta pero el correo aun no
+ * esta verificado: no hay sesion, solo un token para enviar el codigo de 6
+ * digitos que llega al correo.
+ */
+export interface EmailVerificationChallengeDto {
+  emailVerificationRequired: true;
+  verificationToken: string;
+  email: string;
+  expiration: string;
+}
+
+export type SignInResponse = LoginResponseDto | MfaChallengeDto | EmailVerificationChallengeDto;
 
 /** POST /api/users/mfa/setup. */
 export interface MfaSetupDto {

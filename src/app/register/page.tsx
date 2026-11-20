@@ -3,7 +3,18 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { isMfaChallenge, login, register, setToken, setUser } from "@/lib/api/client";
+import {
+  ApiError,
+  isEmailVerificationChallenge,
+  isMfaChallenge,
+  login,
+  register,
+  setToken,
+  setUser,
+  verifyEmail,
+} from "@/lib/api/client";
+import type { SignInResponse } from "@/lib/types";
+import EmailVerificationStep from "@/components/EmailVerificationStep";
 import { useLocale, useT } from "@/lib/i18n/useT";
 import { useApiErrorMessage } from "@/lib/i18n/useApiError";
 
@@ -25,6 +36,47 @@ export default function RegisterPage() {
   const [confirmation, setConfirmation] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Cuenta creada: falta el codigo que la API ha enviado al correo.
+  const [emailChallenge, setEmailChallenge] = useState<{ token: string; email: string } | null>(null);
+
+  // Tras el registro (o el codigo): sesion, o la pantalla que toque.
+  function handleSignIn(session: SignInResponse) {
+    if (isEmailVerificationChallenge(session)) {
+      setEmailChallenge({ token: session.verificationToken, email: session.email });
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Una cuenta recien creada no tiene MFA; si aun asi lo pidiera, que
+    // entre por la pantalla de acceso, que sabe pedir el codigo.
+    if (isMfaChallenge(session)) {
+      router.push("/login");
+      return;
+    }
+
+    setToken(session.token);
+    setUser(session.user ?? null);
+    router.push("/");
+  }
+
+  async function verifyEmailCode(code: string) {
+    if (!emailChallenge) return;
+
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      handleSignIn(await verifyEmail(emailChallenge.token, code));
+    } catch (cause: unknown) {
+      // Token caducado (30 min): la cuenta ya existe, se sigue desde el acceso.
+      if (cause instanceof ApiError && cause.serverCode === "invalid_verification_token") {
+        router.push("/login");
+        return;
+      }
+      setError(describeError(cause, "errors.signInFailed"));
+      setIsSubmitting(false);
+    }
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -56,20 +108,34 @@ export default function RegisterPage() {
       // El registro no devuelve token, asi que se encadena el acceso: el
       // usuario entra directamente en lugar de tener que escribir lo mismo
       // otra vez en la pantalla de al lado.
-      const session = await login(email.trim(), password);
-      // Una cuenta recien creada no tiene MFA; si aun asi lo pidiera, que
-      // entre por la pantalla de acceso, que sabe pedir el codigo.
-      if (isMfaChallenge(session)) {
-        router.push("/login");
-        return;
-      }
-      setToken(session.token);
-      setUser(session.user ?? null);
-      router.push("/");
+      // Con la verificacion de correo activa, esto devuelve el paso del codigo.
+      handleSignIn(await login(email.trim(), password));
     } catch (cause: unknown) {
       setError(describeError(cause, "errors.createAccountFailed"));
       setIsSubmitting(false);
     }
+  }
+
+  // Cuenta creada: se pide el codigo del correo en lugar del formulario.
+  // "Volver" lleva al acceso: la cuenta ya existe y se entra desde alli.
+  if (emailChallenge !== null) {
+    return (
+      <main className="w-full max-w-sm">
+        <div className="mb-6 text-center">
+          <h1 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+            {t("register.title")}
+          </h1>
+        </div>
+        <EmailVerificationStep
+          verificationToken={emailChallenge.token}
+          email={emailChallenge.email}
+          isSubmitting={isSubmitting}
+          error={error}
+          onVerify={verifyEmailCode}
+          onBack={() => router.push("/login")}
+        />
+      </main>
+    );
   }
 
   return (

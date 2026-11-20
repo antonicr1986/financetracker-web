@@ -5,6 +5,7 @@ import type {
   TransactionInput,
   LoginResponseDto,
   MfaChallengeDto,
+  EmailVerificationChallengeDto,
   MfaRecoveryCodesDto,
   MfaSetupDto,
   PagedResult,
@@ -608,6 +609,32 @@ function setTrustedDeviceToken(value: string | null) {
 /** true si el login pide el segundo paso en lugar de abrir la sesion. */
 export function isMfaChallenge(response: SignInResponse): response is MfaChallengeDto {
   return "mfaRequired" in response && response.mfaRequired === true;
+}
+
+export function isEmailVerificationChallenge(
+  response: SignInResponse,
+): response is EmailVerificationChallengeDto {
+  return "emailVerificationRequired" in response && response.emailVerificationRequired === true;
+}
+
+/**
+ * Codigo de 6 digitos del correo. Correcto: sesion (o, si la cuenta tuviera
+ * MFA, su paso). Errores: invalid_email_code, email_code_expired (hay que
+ * pedir otro) e invalid_verification_token (volver a la contraseña).
+ */
+export async function verifyEmail(verificationToken: string, code: string): Promise<SignInResponse> {
+  return request<SignInResponse>("/api/users/email/verify", {
+    method: "POST",
+    body: JSON.stringify({ verificationToken, code }),
+  });
+}
+
+/** Envia un codigo nuevo (como mucho uno por minuto: email_code_recently_sent). */
+export async function resendEmailCode(verificationToken: string): Promise<void> {
+  await request<void>("/api/users/email/resend", {
+    method: "POST",
+    body: JSON.stringify({ verificationToken }),
+  });
 }
 
 /**

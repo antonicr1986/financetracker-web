@@ -25,6 +25,10 @@ const SERVER_CODES = new Set([
   "invalid_current_password",
   "password_unchanged",
   "password_not_available",
+  "invalid_email_code",
+  "email_code_expired",
+  "email_code_recently_sent",
+  "invalid_verification_token",
 ]);
 
 /**

@@ -7,8 +7,10 @@ import {
   ApiError,
   canConfigureApiUrl,
   googleLogin,
+  isEmailVerificationChallenge,
   isMfaChallenge,
   login,
+  verifyEmail,
   verifyMfa,
   setToken,
   setUser,
@@ -21,6 +23,7 @@ import { useApiErrorMessage } from "@/lib/i18n/useApiError";
 import SessionExpiredBanner from "@/components/SessionExpiredBanner";
 import GoogleSignInButton from "@/components/GoogleSignInButton";
 import MfaLoginStep from "@/components/MfaLoginStep";
+import EmailVerificationStep from "@/components/EmailVerificationStep";
 import type { LoginResponseDto, SignInResponse } from "@/lib/types";
 import Link from "next/link";
 
@@ -44,6 +47,8 @@ export default function LoginPage() {
   const [isSlow, setIsSlow] = useState(false);
   // Con valor, la contraseña ya es correcta y se esta pidiendo el codigo del MFA.
   const [mfaToken, setMfaToken] = useState<string | null>(null);
+  // Con valor, la contraseña es correcta pero falta el codigo enviado al correo.
+  const [emailChallenge, setEmailChallenge] = useState<{ token: string; email: string } | null>(null);
 
   // Precalentamiento: al abrir el login se despiertan la API y la base de
   // datos, asi la espera ocurre mientras se lee la pantalla y no al entrar.
@@ -97,8 +102,16 @@ export default function LoginPage() {
     }
   }
 
-  // Con MFA el login no abre la sesion: pasa a la pantalla del codigo.
+  // Con MFA o con el correo sin verificar el login no abre la sesion: pasa a
+  // la pantalla del codigo que toque.
   function handleSignIn(response: SignInResponse) {
+    if (isEmailVerificationChallenge(response)) {
+      setEmailChallenge({ token: response.verificationToken, email: response.email });
+      return;
+    }
+
+    setEmailChallenge(null);
+
     if (isMfaChallenge(response)) {
       setMfaToken(response.mfaToken);
       return;
@@ -127,8 +140,29 @@ export default function LoginPage() {
     }
   }
 
+  async function verifyEmailCode(code: string) {
+    if (!emailChallenge) return;
+
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      handleSignIn(await verifyEmail(emailChallenge.token, code));
+    } catch (cause: unknown) {
+      // El token de este paso dura 30 minutos: si ha caducado, se vuelve a
+      // pedir la contraseña (que enviara un codigo nuevo si hace falta).
+      if (cause instanceof ApiError && cause.serverCode === "invalid_verification_token") {
+        setEmailChallenge(null);
+      }
+      setError(describeError(cause, "errors.signInFailed"));
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   function backToPassword() {
     setMfaToken(null);
+    setEmailChallenge(null);
     setError(null);
   }
 
@@ -171,7 +205,16 @@ export default function LoginPage() {
           <SessionExpiredBanner />
         </Suspense>
 
-        {mfaToken !== null ? (
+        {emailChallenge !== null ? (
+          <EmailVerificationStep
+            verificationToken={emailChallenge.token}
+            email={emailChallenge.email}
+            isSubmitting={isSubmitting}
+            error={error}
+            onVerify={verifyEmailCode}
+            onBack={backToPassword}
+          />
+        ) : mfaToken !== null ? (
           <MfaLoginStep
             isSubmitting={isSubmitting}
             error={error}

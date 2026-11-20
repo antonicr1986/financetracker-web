@@ -278,6 +278,17 @@ export default function LoginPage() {
           </button>
           </div>
 
+          {!mockMode && (
+            <div className="mt-2 text-right">
+              <Link
+                href="/forgot-password"
+                className="text-sm font-medium text-slate-600 underline-offset-2 hover:underline dark:text-slate-300"
+              >
+                {t("login.forgotPassword")}
+              </Link>
+            </div>
+          )}
+
           {error && (
             <p
               role="alert"

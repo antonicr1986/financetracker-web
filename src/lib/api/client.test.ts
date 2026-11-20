@@ -15,6 +15,8 @@ import {
   isEmailVerificationChallenge,
   verifyEmail,
   resendEmailCode,
+  forgotPassword,
+  resetPassword,
   verifyMfa,
   forgetTrustedDevices,
   revokeAllSessions,
@@ -441,6 +443,37 @@ describe("errors", () => {
 
     expect(lastCall().url).toBe(`${API}/api/users/email/resend`);
     expect(JSON.parse(lastCall().init.body as string)).toEqual({ verificationToken: "verify-token" });
+  });
+
+  it("asks for a password reset code", async () => {
+    fetchMock.mockResolvedValue(new Response(null, { status: 204 }));
+
+    await forgotPassword("ana@example.test");
+
+    expect(lastCall().url).toBe(`${API}/api/users/password/forgot`);
+    expect(lastCall().init.method).toBe("POST");
+    expect(JSON.parse(lastCall().init.body as string)).toEqual({ email: "ana@example.test" });
+  });
+
+  it("resets the password with the emailed code", async () => {
+    fetchMock.mockResolvedValue(new Response(null, { status: 204 }));
+
+    await resetPassword("ana@example.test", "123456", "una-clave-nueva-larga");
+
+    expect(lastCall().url).toBe(`${API}/api/users/password/reset`);
+    expect(JSON.parse(lastCall().init.body as string)).toEqual({
+      email: "ana@example.test",
+      code: "123456",
+      newPassword: "una-clave-nueva-larga",
+    });
+  });
+
+  it("reports a wrong reset code with its server code", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ code: "invalid_reset_code" }, 400));
+
+    await expect(resetPassword("ana@example.test", "000000", "una-clave-nueva-larga")).rejects.toMatchObject({
+      serverCode: "invalid_reset_code",
+    });
   });
 
   it("signs out locally after revoking every session", async () => {

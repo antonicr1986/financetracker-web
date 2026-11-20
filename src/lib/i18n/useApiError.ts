@@ -29,6 +29,8 @@ const SERVER_CODES = new Set([
   "email_code_expired",
   "email_code_recently_sent",
   "invalid_verification_token",
+  "invalid_reset_code",
+  "reset_code_expired",
 ]);
 
 /**

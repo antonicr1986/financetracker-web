@@ -629,6 +629,29 @@ export async function verifyEmail(verificationToken: string, code: string): Prom
   });
 }
 
+/**
+ * "¿Has olvidado tu contraseña?": la API envia un codigo al correo si es de
+ * una cuenta con contraseña propia. Responde igual exista o no la cuenta.
+ */
+export async function forgotPassword(email: string): Promise<void> {
+  await request<void>("/api/users/password/forgot", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
+/**
+ * Contraseña nueva con el codigo del correo. No inicia sesion: la API cierra
+ * todas las sesiones y despues se entra con la contraseña nueva.
+ * Errores: invalid_reset_code, reset_code_expired y password_breached.
+ */
+export async function resetPassword(email: string, code: string, newPassword: string): Promise<void> {
+  await request<void>("/api/users/password/reset", {
+    method: "POST",
+    body: JSON.stringify({ email, code, newPassword }),
+  });
+}
+
 /** Envia un codigo nuevo (como mucho uno por minuto: email_code_recently_sent). */
 export async function resendEmailCode(verificationToken: string): Promise<void> {
   await request<void>("/api/users/email/resend", {

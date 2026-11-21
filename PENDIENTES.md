@@ -33,3 +33,11 @@ con `[x]` y se anota la fecha o el commit.
 ## Hecho
 
 - [x] `permissions` globales de solo lectura, `timeout-minutes`, `concurrency` en `deploy` y job `dast` con ZAP.
+
+## Cobertura de tests
+
+- [x] **Medir la cobertura en el CI** con Vitest (`@vitest/coverage-v8`): informe en el
+  resumen del job y un % mínimo, igual que en la API (sin contar el código generado). Fijar
+  el mínimo con la cobertura medida menos 5 puntos. Hecho (nov 2026): con tests de las pantallas de acceso, registro y recuperar contraseña, 43,4 % de líneas, mínimo 35 %.
+- [ ] **Tests del panel y de Configuración** (`src/app/(app)`, 0 %) y de los componentes que
+  aún no tienen (presupuestos, categorías, MFA): subir la cobertura y después el mínimo.

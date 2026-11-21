@@ -634,6 +634,12 @@ export async function verifyEmail(verificationToken: string, code: string): Prom
  * una cuenta con contraseña propia. Responde igual exista o no la cuenta.
  */
 export async function forgotPassword(email: string): Promise<void> {
+  // Sin API (modo demostracion): se simula, para poder ver la pantalla en local.
+  if (isUsingMockData()) {
+    await delay(500);
+    return;
+  }
+
   await request<void>("/api/users/password/forgot", {
     method: "POST",
     body: JSON.stringify({ email }),
@@ -646,6 +652,12 @@ export async function forgotPassword(email: string): Promise<void> {
  * Errores: invalid_reset_code, reset_code_expired y password_breached.
  */
 export async function resetPassword(email: string, code: string, newPassword: string): Promise<void> {
+  // Sin API (modo demostracion): se simula, para poder ver la pantalla en local.
+  if (isUsingMockData()) {
+    await delay(500);
+    return;
+  }
+
   await request<void>("/api/users/password/reset", {
     method: "POST",
     body: JSON.stringify({ email, code, newPassword }),

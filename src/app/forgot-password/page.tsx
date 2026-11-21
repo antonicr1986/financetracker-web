@@ -5,6 +5,7 @@ import { useState, type FormEvent } from "react";
 import { ApiError, forgotPassword, resetPassword } from "@/lib/api/client";
 import { useT } from "@/lib/i18n/useT";
 import { useApiErrorMessage } from "@/lib/i18n/useApiError";
+import PasswordInput from "@/components/PasswordInput";
 
 const inputClasses =
   "mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-500 focus:ring-2 focus:ring-slate-200 disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-600 dark:focus:border-slate-500 dark:focus:ring-slate-800 dark:disabled:bg-slate-900";
@@ -167,28 +168,24 @@ export default function ForgotPasswordPage() {
           <label htmlFor="new-password" className={`mt-4 ${labelClasses}`}>
             {t("passwordReset.newPassword")}
           </label>
-          <input
+          <PasswordInput
             id="new-password"
-            type="password"
             autoComplete="new-password"
             value={password}
-            onChange={(event) => setPassword(event.target.value)}
+            onChange={setPassword}
             disabled={isSubmitting}
-            className={inputClasses}
             placeholder={t("register.passwordPlaceholder")}
           />
 
           <label htmlFor="confirmation" className={`mt-4 ${labelClasses}`}>
             {t("register.confirm")}
           </label>
-          <input
+          <PasswordInput
             id="confirmation"
-            type="password"
             autoComplete="new-password"
             value={confirmation}
-            onChange={(event) => setConfirmation(event.target.value)}
+            onChange={setConfirmation}
             disabled={isSubmitting}
-            className={inputClasses}
             placeholder="********"
           />
 

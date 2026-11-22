@@ -1,0 +1,6 @@
+# Falsos positivos revisados a mano. Cada linea es el fingerprint que da
+# gitleaks: commit:archivo:regla:linea.
+
+# NEW_PASSWORD en el test de recuperar contraseña: una contraseña de prueba
+# para un formulario, no una credencial real.
+3a8096c3fa6c563b8b8998747a8fda890c789a90:src/app/forgot-password/page.test.tsx:hardcoded-token-assignment:15

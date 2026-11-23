@@ -1,6 +1,7 @@
 import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
+import packageJson from "./package.json";
 
 /**
  * Vitest corre fuera de Next, asi que hay que darle dos cosas que en la
@@ -15,6 +16,8 @@ export default defineConfig({
   },
   test: {
     environment: "jsdom",
+    // Lo mismo que inyecta next.config.ts al compilar.
+    env: { NEXT_PUBLIC_APP_VERSION: packageJson.version },
     setupFiles: ["./src/test/setup.ts"],
     include: ["src/**/*.test.{ts,tsx}"],
     // npm run test:coverage (el CI): % de lineas cubiertas por los tests en todo

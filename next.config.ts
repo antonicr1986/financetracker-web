@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import packageJson from "./package.json";
 
 const isDev = process.env.NODE_ENV !== "production";
 
@@ -48,6 +49,12 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Version de la web, la de package.json: cada pestana la lleva desde que se
+  // cargo y el cliente la envia a la API (X-Client-Version). Se sube solo antes
+  // de activar un cambio que rompa versiones antiguas.
+  env: {
+    NEXT_PUBLIC_APP_VERSION: packageJson.version,
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

@@ -211,6 +211,7 @@ export function isUsingMockData(): boolean {
  */
 export type ApiErrorCode =
   | "api_not_configured"
+  | "client_version_unsupported"
   | "session_expired"
   | "invalid_request"
   | "server_error"
@@ -298,6 +299,34 @@ export function warmUpApi(): void {
   fetch(`${baseUrl}/health/ready`, { mode: "no-cors", cache: "no-store" }).catch(() => {});
 }
 
+const UPDATE_EVENT = "financetracker:update-required";
+
+/**
+ * La API ha respondido 426: esta pestana tiene una version que ya no esta
+ * soportada. Vive en memoria y no en localStorage a proposito: al recargar se
+ * carga la version nueva y el aviso debe desaparecer.
+ */
+let updateRequired = false;
+
+export function isUpdateRequired(): boolean {
+  return updateRequired;
+}
+
+export function subscribeToUpdateRequired(onChange: () => void): () => void {
+  if (typeof window === "undefined") return () => {};
+  window.addEventListener(UPDATE_EVENT, onChange);
+  return () => window.removeEventListener(UPDATE_EVENT, onChange);
+}
+
+function markUpdateRequired() {
+  if (updateRequired) return;
+  updateRequired = true;
+  if (typeof window !== "undefined") window.dispatchEvent(new Event(UPDATE_EVENT));
+}
+
+/** Version de la web con la que se cargo esta pestana (ver next.config.ts). */
+const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION ?? "";
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const baseUrl = getApiUrl();
 
@@ -311,6 +340,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
     headers: {
       "Content-Type": "application/json",
+      // Que app y que version son: la API puede exigir una minima (426).
+      "X-Client-Platform": "web",
+      "X-Client-Version": APP_VERSION,
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...init?.headers,
     },
@@ -331,8 +363,12 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     // quien simplemente se habia equivocado de contrasena.
     const serverCode = await readServerMessage(response);
 
+    if (response.status === 426) markUpdateRequired();
+
     const code: ApiErrorCode =
-      response.status === 401
+      response.status === 426
+        ? "client_version_unsupported"
+        : response.status === 401
         ? "session_expired"
         : response.status === 400
           ? "invalid_request"

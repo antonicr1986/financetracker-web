@@ -24,6 +24,7 @@ import {
   checkSession,
   getTrustedDeviceToken,
   isUsingMockData,
+  isUpdateRequired,
   login,
   register,
   setToken,
@@ -34,6 +35,7 @@ import {
 } from "./client";
 import { mockTransactions } from "@/lib/mock";
 import type { LoginResponseDto, TransactionDto } from "@/lib/types";
+import packageJson from "../../../package.json";
 
 const API = "https://api.example.test";
 
@@ -168,6 +170,16 @@ describe("requests", () => {
     expect(init.headers.Authorization).toBe("Bearer my-token");
   });
 
+  it("sends the web platform and version on every request", async () => {
+    fetchMock.mockResolvedValue(jsonResponse([]));
+
+    await getCategories();
+
+    const { headers } = lastCall().init;
+    expect(headers["X-Client-Platform"]).toBe("web");
+    expect(headers["X-Client-Version"]).toBe(packageJson.version);
+  });
+
   it("sends no Authorization header without a session", async () => {
     fetchMock.mockResolvedValue(jsonResponse([]));
 
@@ -251,6 +263,18 @@ describe("requests", () => {
 describe("errors", () => {
   beforeEach(() => {
     localStorage.setItem(API_URL_KEY, API);
+  });
+
+  it("a 426 throws client_version_unsupported and flags the update", async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse({ code: "client_version_unsupported", minimumVersion: "1.1.0" }, 426),
+    );
+
+    const error = await errorOf(getCategories());
+
+    expect(error.code).toBe("client_version_unsupported");
+    expect(error.status).toBe(426);
+    expect(isUpdateRequired()).toBe(true);
   });
 
   it("closes the session and flags it as expired on a 401 with a token", async () => {

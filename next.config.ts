@@ -12,11 +12,25 @@ const isDev = process.env.NODE_ENV !== "production";
  *   renderizar todo de forma dinamica. Aun asi la politica bloquea cualquier
  *   script de otro dominio. En desarrollo hace falta ademas 'unsafe-eval'
  *   (recarga en caliente) y el script de depuracion de Vercel Analytics.
- * - connect-src: la URL de la API es configurable desde Configuracion (puede
- *   ser la de Azure, otra https o http://localhost en local), asi que se
- *   permite cualquier https y localhost en lugar de fijar un unico dominio.
+ * - connect-src: en produccion, solo la propia web, la API (NEXT_PUBLIC_API_URL,
+ *   que alli no se puede cambiar desde Configuracion) y Google. El token va en
+ *   localStorage: si algun dia hubiera un XSS, el navegador no le dejaria
+ *   mandarlo a un servidor ajeno. En desarrollo la URL de la API se puede
+ *   cambiar en Configuracion, asi que ahi se permite cualquier https y localhost.
  * - frame-ancestors 'none': nadie puede meter la web en un iframe (clickjacking).
  */
+const apiOrigin = (() => {
+  try {
+    return process.env.NEXT_PUBLIC_API_URL ? new URL(process.env.NEXT_PUBLIC_API_URL).origin : null;
+  } catch {
+    return null;
+  }
+})();
+
+const connectSrc = isDev
+  ? "'self' https: http://localhost:* http://127.0.0.1:*"
+  : ["'self'", apiOrigin, "https://accounts.google.com/gsi/"].filter(Boolean).join(" ");
+
 const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/client${isDev ? " 'unsafe-eval' https://va.vercel-scripts.com" : ""}`,
@@ -25,7 +39,7 @@ const csp = [
   "frame-src https://accounts.google.com/gsi/",
   "img-src 'self' data: blob:",
   "font-src 'self'",
-  "connect-src 'self' https: http://localhost:* http://127.0.0.1:*",
+  `connect-src ${connectSrc}`,
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",

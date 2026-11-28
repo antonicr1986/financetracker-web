@@ -289,14 +289,16 @@ async function readServerMessage(response: Response): Promise<string | null> {
  * login hace que ambos arranquen mientras la persona lee la pantalla, en vez
  * de cuando pulsa "Entrar".
  *
- * "no-cors" porque solo interesa que la peticion llegue: la respuesta no se
- * lee, asi que no hace falta que el endpoint de salud tenga CORS. Cualquier
- * fallo se ignora; el login sigue funcionando igual.
+ * Con CORS normal (la API ya admite esta web) y no "no-cors": con "no-cors"
+ * la cabecera Cross-Origin-Resource-Policy de la API hacia que el navegador
+ * descartara la respuesta y llenara la consola de errores, aunque la peticion
+ * llegaba igual. La respuesta no se lee y cualquier fallo se ignora; el login
+ * sigue funcionando igual.
  */
 export function warmUpApi(): void {
   const baseUrl = getApiUrl();
   if (!baseUrl) return;
-  fetch(`${baseUrl}/health/ready`, { mode: "no-cors", cache: "no-store" }).catch(() => {});
+  fetch(`${baseUrl}/health/ready`, { cache: "no-store" }).catch(() => {});
 }
 
 const UPDATE_EVENT = "financetracker:update-required";

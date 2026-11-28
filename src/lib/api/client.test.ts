@@ -629,7 +629,7 @@ describe("mock mode (no API configured)", () => {
 });
 
 describe("warmUpApi", () => {
-  it("pings the readiness endpoint without waiting for CORS", () => {
+  it("pings the readiness endpoint with a normal CORS request", () => {
     localStorage.setItem(API_URL_KEY, API);
     fetchMock.mockResolvedValue(new Response(null, { status: 200 }));
 
@@ -637,7 +637,8 @@ describe("warmUpApi", () => {
 
     const { url, init } = lastCall();
     expect(url).toBe(`${API}/health/ready`);
-    expect(init.mode).toBe("no-cors");
+    // "no-cors" hacia que la cabecera CORP de la API llenara la consola de errores.
+    expect(init.mode).toBeUndefined();
   });
 
   it("does nothing without an API", () => {
